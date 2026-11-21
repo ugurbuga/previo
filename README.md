@@ -46,14 +46,14 @@ plugins {
 
 dependencies {
     // 1. Previo Runtime Library
-    implementation("com.github.ugurbuga.Previo:previo-runtime:1.0.0-alpha02")
+    implementation("com.github.ugurbuga.previo:previo-runtime:1.0.0-alpha02")
     
     // 2. Previo KSP Processor (Generates preview registry at compile time)
     // For Multiplatform commonMain metadata:
-    add("kspCommonMainMetadata", "com.github.ugurbuga.Previo:previo-processor:1.0.0-alpha02")
+    add("kspCommonMainMetadata", "com.github.ugurbuga.previo:previo-processor:1.0.0-alpha02")
     
     // OR for Android-only / JVM-only modules:
-    // ksp("com.github.ugurbuga.Previo:previo-processor:1.0.0-alpha02")
+    // ksp("com.github.ugurbuga.previo:previo-processor:1.0.0-alpha02")
 }
 ```
 

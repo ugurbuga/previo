@@ -11,7 +11,7 @@ version = "1.0.0-alpha02"
 dependencies {
     implementation(libs.kotlin.test)
     // KSP API dependency
-    implementation("com.google.devtools.ksp:symbol-processing-api:2.1.20-1.0.31")
+    implementation(libs.kspApi)
 }
 
 publishing {
