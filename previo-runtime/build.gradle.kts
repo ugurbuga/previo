@@ -10,7 +10,7 @@ plugins {
 }
 
 group = "com.github.ugurbuga"
-version = "1.0.0-alpha03"
+version = "1.0.0-alpha04"
 
 kotlin {
     listOf(
@@ -57,15 +57,6 @@ kotlin {
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)
-        }
-    }
-}
-
-publishing {
-    publications.all {
-        if (this is MavenPublication) {
-            artifactId = "previo-runtime"
-            version = "1.0.0-alpha03"
         }
     }
 }

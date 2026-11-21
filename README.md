@@ -15,7 +15,7 @@ Previo is a modern Kotlin Multiplatform library that automatically discovers all
 ---
 
 ## 📦 Current Version
-- **Latest Version**: `1.0.0-alpha03`
+- **Latest Version**: `1.0.0-alpha04`
 - **Hosted on**: [JitPack](https://jitpack.io/#ugurbuga/Previo)
 
 ---
@@ -69,19 +69,19 @@ In your module's `build.gradle.kts`:
 ```kotlin
 dependencies {
     // 1. Previo Runtime Library
-    implementation("com.github.ugurbuga.previo:previo-runtime:1.0.0-alpha03")
+    implementation("com.github.ugurbuga.previo:previo-runtime:1.0.0-alpha04")
     
     // 2. Previo KSP Processor (Generates preview registry at compile time)
     // For Multiplatform commonMain metadata:
-    add("kspCommonMainMetadata", "com.github.ugurbuga.previo:previo-processor:1.0.0-alpha03")
+    add("kspCommonMainMetadata", "com.github.ugurbuga.previo:previo-processor:1.0.0-alpha04")
 }
 ```
 
 > ⚠️ **Important Note on JitPack**: 
-> If you get an `appleMain` or multiplatform dependency resolution failure, it means **JitPack has not built version `1.0.0-alpha03` yet**. 
+> If you get an `appleMain` or multiplatform dependency resolution failure, it means **JitPack has not built version `1.0.0-alpha04` yet**. 
 > To fix this:
 > 1. Push your latest commits to GitHub.
-> 2. Go to your GitHub repository -> **Releases** -> **Create a new release** with tag **`v1.0.0-alpha03`**.
+> 2. Go to your GitHub repository -> **Releases** -> **Create a new release** with tag **`v1.0.0-alpha04`**.
 > 3. Once JitPack builds the tag successfully (you can check the build log on jitpack.io), Gradle will resolve the iOS and Android targets successfully.
 
 *Note for Kotlin Multiplatform projects using commonMain metadata KSP:*
