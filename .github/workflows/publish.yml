@@ -35,4 +35,4 @@ jobs:
           ORG_GRADLE_PROJECT_gpr_key: ${{ secrets.GITHUB_TOKEN }}
         run: |
           ./gradlew publishAndReleaseToMavenCentral --no-configuration-cache -x test -x lint
-          ./gradlew :previo-runtime:publishAllPublicationsToGitHubPackagesRepository :previo-processor:publishAllPublicationsToGitHubPackagesRepository --no-configuration-cache -x test -x lint
+          ./gradlew :previo-runtime:publishAllPublicationsToGitHubPackagesRepository :previo-processor:publishAllPublicationsToGitHubPackagesRepository -Pgpr.user=${{ github.actor }} -Pgpr.key=${{ secrets.GITHUB_TOKEN }} --no-configuration-cache -x test -x lint
