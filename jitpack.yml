@@ -1,5 +1,6 @@
 jdk:
-  - openjdk17
-
+  - openjdk21
+before_install:
+  - ./gradlew :previo-runtime:generateComposeResClass
 install:
-  - ./gradlew publishToMavenLocal
+  - ./gradlew :previo-runtime:publishToMavenLocal :previo-processor:publishToMavenLocal -x test -x lint
