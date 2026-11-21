@@ -3,6 +3,8 @@
 
 Previo is a modern Kotlin Multiplatform library that automatically discovers all `@Preview` annotated composable functions across your modules at compile-time using **KSP (Kotlin Symbol Processing)** with **zero reflection**, and visualizes them in a rich, scroll-safe component catalog explorer across Android, Desktop, iOS, and Web.
 
+👉 **[Live Web Demo (Wasm)](https://ugurbuga.github.io/previo/)**
+
 ---
 
 ## ✨ Key Features
