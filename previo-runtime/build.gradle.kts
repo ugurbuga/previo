@@ -6,11 +6,11 @@ plugins {
     alias(libs.plugins.androidMultiplatformLibrary)
     alias(libs.plugins.composeMultiplatform)
     alias(libs.plugins.composeCompiler)
-    `maven-publish`
+    alias(libs.plugins.mavenPublish)
 }
 
-group = "com.github.ugurbuga"
-version = "1.0.0-alpha05"
+group = "io.github.ugurbuga"
+version = "1.0.0-alpha01"
 
 kotlin {
     listOf(
@@ -57,6 +57,36 @@ kotlin {
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)
+        }
+    }
+}
+
+mavenPublishing {
+    publishToMavenCentral(com.vanniktech.maven.publish.SonatypeHost.CENTRAL_PORTAL)
+    signAllPublications()
+    coordinates("io.github.ugurbuga", "previo-runtime", "1.0.0-alpha01")
+
+    pom {
+        name.set("Previo Runtime")
+        description.set("Automated Runtime Preview Explorer for Compose Multiplatform")
+        url.set("https://github.com/ugurbuga/previo")
+        licenses {
+            license {
+                name.set("The Apache Software License, Version 2.0")
+                url.set("http://www.apache.org/licenses/LICENSE-2.0.txt")
+            }
+        }
+        developers {
+            developer {
+                id.set("ugurbuga")
+                name.set("Ugur Buga")
+                email.set("ugurbuga@gmail.com")
+            }
+        }
+        scm {
+            connection.set("scm:git:github.com/ugurbuga/previo.git")
+            developerConnection.set("scm:git:ssh://github.com/ugurbuga/previo.git")
+            url.set("https://github.com/ugurbuga/previo")
         }
     }
 }

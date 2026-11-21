@@ -16,12 +16,12 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import org.jetbrains.compose.resources.painterResource
 
-import com.github.ugurbuga.previo_runtime.generated.resources.Res
-import com.github.ugurbuga.previo_runtime.generated.resources.ic_arrow_back
-import com.github.ugurbuga.previo_runtime.generated.resources.ic_search
-import com.github.ugurbuga.previo_runtime.generated.resources.ic_close
-import com.github.ugurbuga.previo_runtime.generated.resources.ic_filter_list
-import com.github.ugurbuga.previo_runtime.generated.resources.ic_chevron_right
+import io.github.ugurbuga.previo_runtime.generated.resources.Res
+import io.github.ugurbuga.previo_runtime.generated.resources.ic_arrow_back
+import io.github.ugurbuga.previo_runtime.generated.resources.ic_search
+import io.github.ugurbuga.previo_runtime.generated.resources.ic_close
+import io.github.ugurbuga.previo_runtime.generated.resources.ic_filter_list
+import io.github.ugurbuga.previo_runtime.generated.resources.ic_chevron_right
 
 data class CategoryItem(
     val group: String,

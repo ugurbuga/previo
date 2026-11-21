@@ -15,22 +15,21 @@ Previo is a modern Kotlin Multiplatform library that automatically discovers all
 ---
 
 ## 📦 Current Version
-- **Latest Version**: `1.0.0-alpha05`
-- **Hosted on**: [JitPack](https://jitpack.io/#ugurbuga/Previo)
+- **Latest Version**: `1.0.0-alpha01`
+- **Hosted on**: [Maven Central](https://central.sonatype.com/)
 
 ---
 
 ## 🛠️ Step-by-Step Integration Guide
 
-### Step 1: Add JitPack Repository
-Add JitPack to your repositories (in `settings.gradle.kts` under `dependencyResolutionManagement` or root `build.gradle.kts`):
+### Step 1: Add Repositories
+Ensure `mavenCentral()` is in your repositories (in `settings.gradle.kts` under `dependencyResolutionManagement` or root `build.gradle.kts`):
 
 ```kotlin
 dependencyResolutionManagement {
     repositories {
         google()
         mavenCentral()
-        maven { url = uri("https://jitpack.io") }
     }
 }
 ```
@@ -69,20 +68,13 @@ In your module's `build.gradle.kts`:
 ```kotlin
 dependencies {
     // 1. Previo Runtime Library
-    implementation("com.github.ugurbuga.previo:previo-runtime:1.0.0-alpha05")
+    implementation("io.github.ugurbuga:previo-runtime:1.0.0-alpha01")
     
     // 2. Previo KSP Processor (Generates preview registry at compile time)
     // For Multiplatform commonMain metadata:
-    add("kspCommonMainMetadata", "com.github.ugurbuga.previo:previo-processor:1.0.0-alpha05")
+    add("kspCommonMainMetadata", "io.github.ugurbuga:previo-processor:1.0.0-alpha01")
 }
 ```
-
-> ⚠️ **Important Note on JitPack**: 
-> If you get an `appleMain` or multiplatform dependency resolution failure, it means **JitPack has not built version `1.0.0-alpha05` yet**. 
-> To fix this:
-> 1. Push your latest commits to GitHub.
-> 2. Go to your GitHub repository -> **Releases** -> **Create a new release** with tag **`v1.0.0-alpha05`**.
-> 3. Once JitPack builds the tag successfully (you can check the build log on jitpack.io), Gradle will resolve the iOS and Android targets successfully.
 
 *Note for Kotlin Multiplatform projects using commonMain metadata KSP:*
 Ensure KSP generated metadata source directory is linked in your multiplatform `sourceSets`:
