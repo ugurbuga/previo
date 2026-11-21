@@ -10,7 +10,7 @@ plugins {
 }
 
 group = "com.github.ugurbuga"
-version = "1.0.0"
+version = "1.0.0-alpha01"
 
 kotlin {
     listOf(
@@ -34,8 +34,8 @@ kotlin {
     }
     androidLibrary {
         namespace = "com.ugurbuga.previo.runtime"
-        compileSdk = 34
-        minSdk = 24
+        compileSdk = libs.versions.android.compileSdk.get().toInt()
+        minSdk = libs.versions.android.minSdk.get().toInt()
         androidResources {
             enable = true
         }
@@ -65,6 +65,7 @@ publishing {
     publications.all {
         if (this is MavenPublication) {
             artifactId = "previo-runtime"
+            version = "1.0.0-alpha01"
         }
     }
 }

@@ -16,45 +16,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 
-@Preview(name = "[Buttons] [1] [Primary] [Enabled]")
-@Composable
-fun PrimaryButtonEnabledPreview() {
-    Button(onClick = {}, shape = RoundedCornerShape(4.dp)) {
-        Text("Primary Enabled")
-    }
-}
-
-@Preview(name = "[Buttons] [1] [Primary] [Disabled]")
-@Composable
-fun PrimaryButtonDisabledPreview() {
-    Button(onClick = {}, enabled = false, shape = RoundedCornerShape(4.dp)) {
-        Text("Primary Disabled")
-    }
-}
-
-@Preview(name = "[Buttons] [2] [Secondary] [Enabled]")
-@Composable
-fun SecondaryButtonEnabledPreview() {
-    Button(onClick = {}, shape = RoundedCornerShape(4.dp)) {
-        Text("Secondary Enabled")
-    }
-}
-
-@Preview(name = "[Cards] [1] [Profile] [Default]")
-@Composable
-fun ProfileCardPreview() {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(4.dp)
-    ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            Text("Profile Card", style = MaterialTheme.typography.titleMedium)
-            Spacer(modifier = Modifier.height(4.dp))
-            Text("User: John Doe", style = MaterialTheme.typography.bodyMedium)
-        }
-    }
-}
-
 @Preview(name = "[Screens] [1] [Settings] [Full]")
 @Composable
 fun LongSettingsScreenPreview() {
@@ -672,123 +633,6 @@ fun TransactionsLazyListScreenPreview() {
     }
 }
 
-@Preview(name = "[Components] [1] [Media] [PlayerCard]")
-@Composable
-fun MediaPlaybackCardPreview() {
-    Card(
-        modifier = Modifier.fillMaxWidth().padding(8.dp),
-        shape = RoundedCornerShape(4.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
-    ) {
-        Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
-                Surface(
-                    modifier = Modifier.size(64.dp),
-                    color = MaterialTheme.colorScheme.primary,
-                    shape = RoundedCornerShape(4.dp)
-                ) {
-                    Box(contentAlignment = Alignment.Center) {
-                        Text("🎵", style = MaterialTheme.typography.headlineMedium)
-                    }
-                }
-                Column(modifier = Modifier.weight(1f)) {
-                    Text("Episode 42: Building Previo", style = MaterialTheme.typography.titleMedium)
-                    Text("Kotlin Multiplatform Podcast", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                }
-            }
-            LinearProgressIndicator(progress = { 0.35f }, modifier = Modifier.fillMaxWidth())
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                Text("03:45", style = MaterialTheme.typography.labelSmall)
-                Text("45:00", style = MaterialTheme.typography.labelSmall)
-            }
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly, verticalAlignment = Alignment.CenterVertically) {
-                Text("⏮", style = MaterialTheme.typography.titleLarge)
-                Button(onClick = {}, shape = RoundedCornerShape(4.dp)) { Text("⏸ Pause") }
-                Text("⏭", style = MaterialTheme.typography.titleLarge)
-            }
-        }
-    }
-}
-
-@Preview(name = "[Components] [2] [Notifications] [GroupedList]")
-@Composable
-fun NotificationListPreview() {
-    Column(
-        modifier = Modifier.fillMaxWidth().padding(8.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp)
-    ) {
-        Text("Notifications", style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.primary)
-
-        listOf(
-            Pair("Security Alert", "New login detected from macOS in San Francisco."),
-            Pair("Release Update", "Previo version 1.0.0 has been published to Maven."),
-            Pair("Social Mention", "Alex mentioned you in a comment: 'Great job!'")
-        ).forEach { (title, body) ->
-            Card(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(4.dp)) {
-                Column(modifier = Modifier.padding(12.dp)) {
-                    Text(title, style = MaterialTheme.typography.titleSmall)
-                    Spacer(modifier = Modifier.height(2.dp))
-                    Text(body, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                }
-            }
-        }
-    }
-}
-
-@Preview(name = "[Components] [3] [Payment] [CreditCard]")
-@Composable
-fun CreditCardViewPreview() {
-    Surface(
-        modifier = Modifier.fillMaxWidth().height(200.dp).padding(8.dp),
-        color = MaterialTheme.colorScheme.primary,
-        shape = RoundedCornerShape(4.dp)
-    ) {
-        Column(
-            modifier = Modifier.fillMaxSize().padding(20.dp),
-            verticalArrangement = Arrangement.SpaceBetween
-        ) {
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                Text("PREVIO BANK", style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onPrimary)
-                Text("VISA", style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.onPrimary)
-            }
-            Text("**** **** **** 4829", style = MaterialTheme.typography.headlineMedium, color = MaterialTheme.colorScheme.onPrimary)
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                Column {
-                    Text("CARDHOLDER", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.7f))
-                    Text("UGUR BUGA", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onPrimary)
-                }
-                Column {
-                    Text("EXPIRES", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.7f))
-                    Text("08/28", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onPrimary)
-                }
-            }
-        }
-    }
-}
-
-@Preview(name = "Simple Unformatted Button")
-@Composable
-fun SimpleUnformattedButtonPreview() {
-    Button(onClick = {}, shape = RoundedCornerShape(4.dp)) {
-        Text("Simple Unformatted Button")
-    }
-}
-
-@Preview(name = "Custom Header Banner")
-@Composable
-fun CustomHeaderBannerPreview() {
-    Surface(
-        modifier = Modifier.fillMaxWidth().padding(8.dp),
-        color = MaterialTheme.colorScheme.secondaryContainer,
-        shape = RoundedCornerShape(4.dp)
-    ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            Text("Custom HeaderBanner", style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSecondaryContainer)
-            Text("This preview does not use 4-part bracket formatting.", style = MaterialTheme.typography.bodySmall)
-        }
-    }
-}
-
 @Preview(name = "[Screens] [10] [Transactions] [LazyColumn]")
 @Composable
 fun TransactionsLazyList2ScreenPreview() {
@@ -799,16 +643,4 @@ fun TransactionsLazyList2ScreenPreview() {
 @Composable
 fun SettingsInternalScroll2ScreenPreview() {
     SettingsInternalScrollScreenPreview()
-}
-
-@Preview(name = "Floating Action Button")
-@Composable
-fun FloatingActionButtonPreview() {
-    FloatingActionButton(
-        onClick = {},
-        shape = RoundedCornerShape(4.dp),
-        containerColor = MaterialTheme.colorScheme.primary
-    ) {
-        Text("+ Add Item", modifier = Modifier.padding(horizontal = 16.dp))
-    }
 }

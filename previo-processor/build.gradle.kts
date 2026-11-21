@@ -6,7 +6,7 @@ plugins {
 }
 
 group = "com.github.ugurbuga"
-version = "1.0.0"
+version = "1.0.0-alpha01"
 
 dependencies {
     implementation(libs.kotlin.test)
@@ -20,7 +20,7 @@ publishing {
             from(components.getByName("java"))
             groupId = "com.github.ugurbuga"
             artifactId = "previo-processor"
-            version = "1.0.0"
+            version = "1.0.0-alpha01"
         }
     }
 }

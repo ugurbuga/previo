@@ -31,10 +31,14 @@ kotlin {
     }
     androidLibrary {
         namespace = "com.ugurbuga.previo.shared"
-        compileSdk = 34
-        minSdk = 24
+        compileSdk = libs.versions.android.compileSdk.get().toInt()
+        minSdk = libs.versions.android.minSdk.get().toInt()
     }
     sourceSets {
+        named("commonMain").configure {
+            kotlin.srcDir("build/generated/ksp/metadata/commonMain/kotlin")
+        }
+
         androidMain.dependencies {
             implementation(libs.compose.uiToolingPreview)
             implementation(libs.compose.uiTooling)
@@ -61,6 +65,5 @@ kotlin {
 
 dependencies {
     androidRuntimeClasspath(libs.compose.uiTooling)
-    add("kspAndroid", project(":previo-processor"))
-    add("kspJvm", project(":previo-processor"))
+    add("kspCommonMainMetadata", project(":previo-processor"))
 }
