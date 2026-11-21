@@ -10,7 +10,7 @@ plugins {
 }
 
 group = "com.github.ugurbuga"
-version = "1.0.0-alpha01"
+version = "1.0.0-alpha02"
 
 kotlin {
     listOf(
@@ -65,7 +65,7 @@ publishing {
     publications.all {
         if (this is MavenPublication) {
             artifactId = "previo-runtime"
-            version = "1.0.0-alpha01"
+            version = "1.0.0-alpha02"
         }
     }
 }
