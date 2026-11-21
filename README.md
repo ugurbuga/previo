@@ -15,7 +15,7 @@ Previo is a modern Kotlin Multiplatform library that automatically discovers all
 ---
 
 ## 📦 Current Version
-- **Latest Version**: `1.0.0-alpha02`
+- **Latest Version**: `1.0.0-alpha03`
 - **Hosted on**: [JitPack](https://jitpack.io/#ugurbuga/Previo)
 
 ---
@@ -69,11 +69,11 @@ In your module's `build.gradle.kts`:
 ```kotlin
 dependencies {
     // 1. Previo Runtime Library
-    implementation("com.github.ugurbuga.previo:previo-runtime:1.0.0-alpha02")
+    implementation("com.github.ugurbuga.previo:previo-runtime:1.0.0-alpha03")
     
     // 2. Previo KSP Processor (Generates preview registry at compile time)
     // For Multiplatform commonMain metadata:
-    add("kspCommonMainMetadata", "com.github.ugurbuga.previo:previo-processor:1.0.0-alpha02")
+    add("kspCommonMainMetadata", "com.github.ugurbuga.previo:previo-processor:1.0.0-alpha03")
 }
 ```
 
