@@ -10,7 +10,7 @@ plugins {
 }
 
 group = "io.github.ugurbuga"
-version = "1.0.0-alpha01"
+version = "1.0.0-alpha06"
 
 kotlin {
     listOf(
@@ -64,7 +64,7 @@ kotlin {
 mavenPublishing {
     publishToMavenCentral(com.vanniktech.maven.publish.SonatypeHost.CENTRAL_PORTAL)
     signAllPublications()
-    coordinates("io.github.ugurbuga", "previo-runtime", "1.0.0-alpha01")
+    coordinates("io.github.ugurbuga", "previo-runtime", "1.0.0-alpha06")
 
     pom {
         name.set("Previo Runtime")

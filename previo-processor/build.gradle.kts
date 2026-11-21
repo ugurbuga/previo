@@ -6,7 +6,7 @@ plugins {
 }
 
 group = "io.github.ugurbuga"
-version = "1.0.0-alpha01"
+version = "1.0.0-alpha06"
 
 dependencies {
     implementation(libs.kotlin.test)
@@ -17,7 +17,7 @@ dependencies {
 mavenPublishing {
     publishToMavenCentral(com.vanniktech.maven.publish.SonatypeHost.CENTRAL_PORTAL)
     signAllPublications()
-    coordinates("io.github.ugurbuga", "previo-processor", "1.0.0-alpha01")
+    coordinates("io.github.ugurbuga", "previo-processor", "1.0.0-alpha06")
 
     pom {
         name.set("Previo Processor")
