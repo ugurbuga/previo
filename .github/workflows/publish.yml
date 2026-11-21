@@ -37,4 +37,4 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           ./gradlew publishAndReleaseToMavenCentral --no-configuration-cache -x test -x lint
-          ./gradlew publishAllPublicationsToGitHubPackagesRepository -Pgpr.user=${{ github.actor }} -Pgpr.key=${{ secrets.GITHUB_TOKEN }} --no-configuration-cache -x test -x lint
+          ./gradlew publishToGithubpackagesRepository -Pgpr.user=${{ github.actor }} -Pgpr.key=${{ secrets.GITHUB_TOKEN }} --no-configuration-cache -x test -x lint

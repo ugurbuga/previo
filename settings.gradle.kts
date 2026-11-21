@@ -24,6 +24,13 @@ dependencyResolutionManagement {
             }
         }
         mavenCentral()
+        maven {
+            url = uri("https://maven.pkg.github.com/ugurbuga/previo")
+            credentials {
+                username = "ugurbuga"
+                password = providers.gradleProperty("gpr.key").orNull ?: System.getenv("GITHUB_TOKEN") ?: ""
+            }
+        }
     }
 }
 
