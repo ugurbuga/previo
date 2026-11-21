@@ -35,15 +35,38 @@ dependencyResolutionManagement {
 }
 ```
 
-### Step 2: Add KSP Plugin & Dependencies
-In your module's `build.gradle.kts` (e.g. `:shared` or `:app`), apply the KSP plugin and add the Previo runtime and processor dependencies:
+### Step 2: Configure KSP Plugin
+Previo relies on KSP to generate the preview registry at compile time. 
 
+1. **In your version catalog (`gradle/libs.versions.toml`)**:
+```toml
+[versions]
+kotlin = "2.4.21" # Must match your Kotlin version
+ksp = "2.3.14"    # KSP version matching your Kotlin version
+
+[plugins]
+ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
+```
+
+2. **In your root `build.gradle.kts`**:
+```kotlin
+plugins {
+    alias(libs.plugins.ksp) apply false
+}
+```
+
+3. **In your module's `build.gradle.kts` (e.g. `:shared`)**:
 ```kotlin
 plugins {
     // ...
-    alias(libs.plugins.ksp) // Ensure KSP plugin is applied
+    alias(libs.plugins.ksp)
 }
+```
 
+### Step 3: Add Previo Dependencies
+In your module's `build.gradle.kts`:
+
+```kotlin
 dependencies {
     // 1. Previo Runtime Library
     implementation("com.github.ugurbuga.previo:previo-runtime:1.0.0-alpha02")
@@ -51,9 +74,6 @@ dependencies {
     // 2. Previo KSP Processor (Generates preview registry at compile time)
     // For Multiplatform commonMain metadata:
     add("kspCommonMainMetadata", "com.github.ugurbuga.previo:previo-processor:1.0.0-alpha02")
-    
-    // OR for Android-only / JVM-only modules:
-    // ksp("com.github.ugurbuga.previo:previo-processor:1.0.0-alpha02")
 }
 ```
 
@@ -69,7 +89,7 @@ kotlin {
 }
 ```
 
-### Step 3: Define Previews (Optional Naming Standard)
+### Step 4: Define Previews (Optional Naming Standard)
 Annotate your composables with `@Preview` using the 4-part bracket format for automatic categorization:
 
 ```kotlin
@@ -80,7 +100,7 @@ fun PrimaryButtonPreview() {
 }
 ```
 
-### Step 4: Launch PreviewExplorer in Your App
+### Step 5: Launch PreviewExplorer in Your App
 Call `PreviewExplorer` wherever you want to open your component catalog:
 
 ```kotlin
