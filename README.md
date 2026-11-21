@@ -1,46 +1,108 @@
-This is a Kotlin Multiplatform project targeting Android, iOS, Web, Desktop (JVM).
+# Previo 🚀
+**Automated Runtime Preview Explorer for Compose Multiplatform (CMP)**
 
-* [/iosApp](./iosApp/iosApp) contains an iOS application. Even if you’re sharing your UI with Compose Multiplatform,
-  you need this entry point for your iOS app. This is also where you should add SwiftUI code for your project.
-
-* [/shared](./shared/src) is for code that will be shared across your Compose Multiplatform applications.
-  It contains several subfolders:
-  - [commonMain](./shared/src/commonMain/kotlin) is for code that’s common for all targets.
-  - Other folders are for Kotlin code that will be compiled for only the platform indicated in the folder name.
-    For example, if you want to use Apple’s CoreCrypto for the iOS part of your Kotlin app,
-    the [iosMain](./shared/src/iosMain/kotlin) folder would be the right place for such calls.
-    Similarly, if you want to edit the Desktop (JVM) specific part, the [jvmMain](./shared/src/jvmMain/kotlin)
-    folder is the appropriate location.
-
-### Running the apps
-
-Use the run configurations provided by the run widget in your IDE's toolbar. You can also use these commands and options:
-
-- Android app: `./gradlew :androidApp:assembleDebug`
-- Desktop app:
-  - Hot reload: `./gradlew :desktopApp:hotRun --auto`
-  - Standard run: `./gradlew :desktopApp:run`
-- Web app:
-  - Wasm target (faster, modern browsers): `./gradlew :webApp:wasmJsBrowserDevelopmentRun`
-  - JS target (slower, supports older browsers): `./gradlew :webApp:jsBrowserDevelopmentRun`
-- iOS app: open the [/iosApp](./iosApp) directory in Xcode and run it from there.
-
-### Running tests
-
-Use the run button in your IDE's editor gutter, or run tests using Gradle tasks:
-
-- Android tests: `./gradlew :shared:testAndroidHostTest`
-- Desktop tests: `./gradlew :shared:jvmTest`
-- Web tests:
-  - Wasm target: `./gradlew :shared:wasmJsTest`
-  - JS target: `./gradlew :shared:jsTest`
-- iOS tests: `./gradlew :shared:iosSimulatorArm64Test`
+Previo is a modern Kotlin Multiplatform library that automatically discovers all `@Preview` annotated composable functions across your modules at compile-time using **KSP (Kotlin Symbol Processing)** with **zero reflection**, and visualizes them in a rich, scroll-safe component catalog explorer across Android, Desktop, iOS, and Web.
 
 ---
 
-Learn more about [Kotlin Multiplatform](https://www.jetbrains.com/help/kotlin-multiplatform-dev/get-started.html),
-[Compose Multiplatform](https://kotlinlang.org/compose-multiplatform/),
-[Kotlin/Wasm](https://kotl.in/wasm/)…
+## ✨ Key Features
+- **Zero-Reflection Discovery**: Uses compile-time KSP code generation (`GeneratedPreviewRegistry`) to discover previews.
+- **Smart Scroll Management**: Automatically analyzes AST / source code for `LazyColumn`, `LazyRow`, `verticalScroll`, `horizontalScroll`, and `LazyVerticalGrid` to prevent nested scrolling crashes.
+- **4-Part Naming Standard**: Organize previews cleanly into `[Group] [Order] [Component] [Details]`.
+- **Cross-Platform**: Fully compatible with Android, iOS, Desktop (JVM), and Web (Wasm/JS).
+- **Material 3 Design**: Clean, modern M3 interface with vector drawables and bottom navigation.
 
-We would appreciate your feedback on Compose/Web and Kotlin/Wasm in the public Slack channel [#compose-web](https://slack-chats.kotlinlang.org/c/compose-web).
-If you face any issues, please report them on [YouTrack](https://youtrack.jetbrains.com/newIssue?project=CMP).
+---
+
+## 📦 Current Version
+- **Latest Version**: `1.0.0-alpha02`
+- **Hosted on**: [JitPack](https://jitpack.io/#ugurbuga/Previo)
+
+---
+
+## 🛠️ Step-by-Step Integration Guide
+
+### Step 1: Add JitPack Repository
+Add JitPack to your repositories (in `settings.gradle.kts` under `dependencyResolutionManagement` or root `build.gradle.kts`):
+
+```kotlin
+dependencyResolutionManagement {
+    repositories {
+        google()
+        mavenCentral()
+        maven { url = uri("https://jitpack.io") }
+    }
+}
+```
+
+### Step 2: Add KSP Plugin & Dependencies
+In your module's `build.gradle.kts` (e.g. `:shared` or `:app`), apply the KSP plugin and add the Previo runtime and processor dependencies:
+
+```kotlin
+plugins {
+    // ...
+    alias(libs.plugins.ksp) // Ensure KSP plugin is applied
+}
+
+dependencies {
+    // 1. Previo Runtime Library
+    implementation("com.github.ugurbuga.Previo:previo-runtime:1.0.0-alpha02")
+    
+    // 2. Previo KSP Processor (Generates preview registry at compile time)
+    // For Multiplatform commonMain metadata:
+    add("kspCommonMainMetadata", "com.github.ugurbuga.Previo:previo-processor:1.0.0-alpha02")
+    
+    // OR for Android-only / JVM-only modules:
+    // ksp("com.github.ugurbuga.Previo:previo-processor:1.0.0-alpha02")
+}
+```
+
+*Note for Kotlin Multiplatform projects using commonMain metadata KSP:*
+Ensure KSP generated metadata source directory is linked in your multiplatform `sourceSets`:
+```kotlin
+kotlin {
+    sourceSets {
+        named("commonMain").configure {
+            kotlin.srcDir("build/generated/ksp/metadata/commonMain/kotlin")
+        }
+    }
+}
+```
+
+### Step 3: Define Previews (Optional Naming Standard)
+Annotate your composables with `@Preview` using the 4-part bracket format for automatic categorization:
+
+```kotlin
+@Preview(name = "[Buttons] [1] [Primary] [Enabled]")
+@Composable
+fun PrimaryButtonPreview() {
+    Button(onClick = {}) { Text("Primary") }
+}
+```
+
+### Step 4: Launch PreviewExplorer in Your App
+Call `PreviewExplorer` wherever you want to open your component catalog:
+
+```kotlin
+import com.ugurbuga.previo.runtime.PreviewExplorer
+import com.ugurbuga.previo.runtime.PrevioConfig
+
+@Composable
+fun MyCatalogScreen(onBack: () -> Unit) {
+    PreviewExplorer(
+        onBack = onBack,
+        config = PrevioConfig(
+            title = "Design System Catalog"
+        )
+    )
+}
+```
+
+---
+
+### Running the Multiplatform Apps
+
+- **Android App**: `./gradlew :androidApp:assembleDebug`
+- **Desktop App**: `./gradlew :desktopApp:run`
+- **Web App (Wasm)**: `./gradlew :webApp:wasmJsBrowserDevelopmentRun`
+- **iOS App**: Open `iosApp/iosApp.xcodeproj` in Xcode and run.
