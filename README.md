@@ -77,6 +77,13 @@ dependencies {
 }
 ```
 
+> ⚠️ **Important Note on JitPack**: 
+> If you get an `appleMain` or multiplatform dependency resolution failure, it means **JitPack has not built version `1.0.0-alpha03` yet**. 
+> To fix this:
+> 1. Push your latest commits to GitHub.
+> 2. Go to your GitHub repository -> **Releases** -> **Create a new release** with tag **`v1.0.0-alpha03`**.
+> 3. Once JitPack builds the tag successfully (you can check the build log on jitpack.io), Gradle will resolve the iOS and Android targets successfully.
+
 *Note for Kotlin Multiplatform projects using commonMain metadata KSP:*
 Ensure KSP generated metadata source directory is linked in your multiplatform `sourceSets`:
 ```kotlin
