@@ -5,7 +5,6 @@ plugins {
 
 dependencies {
     implementation(project(":shared"))
-    implementation(project(":previo-runtime"))
 
     implementation(libs.androidx.activity.compose)
     implementation(libs.compose.uiToolingPreview)

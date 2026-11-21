@@ -10,7 +10,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 
-import com.ugurbuga.previo.runtime.GeneratedPreviewRegistry
 import com.ugurbuga.previo.runtime.PreviewExplorer
 import com.ugurbuga.previo.runtime.PrevioConfig
 import com.ugurbuga.previo.theme.AppTypography
@@ -59,11 +58,6 @@ fun PreviewExplorerPlaceholder(onBack: () -> Unit) {
             title = "Previo Component Catalog",
             typography = AppTypography
         )
-    }
-
-    // Touch GeneratedPreviewRegistry directly in commonMain across iOS, Android, Desktop, and Web
-    remember {
-        GeneratedPreviewRegistry.touch()
     }
 
     PreviewExplorer(

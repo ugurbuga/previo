@@ -67,3 +67,7 @@ dependencies {
     androidRuntimeClasspath(libs.compose.uiTooling)
     add("kspCommonMainMetadata", project(":previo-processor"))
 }
+
+tasks.matching { it.name.startsWith("ksp") && it.name != "kspCommonMainKotlinMetadata" }.configureEach {
+    dependsOn("kspCommonMainKotlinMetadata")
+}
