@@ -3,50 +3,73 @@ package com.ugurbuga.previo.runtime
 import androidx.compose.ui.graphics.Color
 
 object PrevioColorConstants {
-    val White = Color.White
-    val Black = Color.Black
-    val DarkCanvas = Color(0xFF121212)
-    val DarkSurface = Color(0xFF1E1E1E)
-    val LightGrayText = Color(0xFF6B7280)
-    val DarkGrayText = Color(0xFF9CA3AF)
-    val LightBorder = Color(0xFFE5E7EB)
-    val DarkBorder = Color(0xFF374151)
-    val LightAccent = Color(0xFFF3F4F6)
-    val DarkAccent = Color(0xFF2E3545)
-    val CustomDarkBg = Color(0xFF1E1B4B)
-    val CustomLightText = Color(0xFFEEF2FF)
-    val CustomSubText = Color(0xFFC7D2FE)
-    val CustomAccent = Color(0xFF3730A3)
+    // Sleek Modern Light Palette
+    val LightScreenBackground = Color(0xFFF8FAFC)
+    val LightCardBackground = Color(0xFFFFFFFF)
+    val LightPrimaryText = Color(0xFF0F172A)
+    val LightSecondaryText = Color(0xFF64748B)
+    val LightDividerOrBorder = Color(0xFFE2E8F0)
+    val LightChipSelectedBackground = Color(0xFFF1F5F9)
+    val LightChipSelectedText = Color(0xFF0F172A)
+    val LightIconTint = Color(0xFF334155)
+    val LightBadgeBackground = Color(0xFFF1F5F9)
+    val LightBadgeText = Color(0xFF334155)
+
+    // Sleek Modern Dark Palette
+    val DarkScreenBackground = Color(0xFF0B0F19)
+    val DarkCardBackground = Color(0xFF111827)
+    val DarkPrimaryText = Color(0xFFF9FAFB)
+    val DarkSecondaryText = Color(0xFF9CA3AF)
+    val DarkDividerOrBorder = Color(0xFF1F2937)
+    val DarkChipSelectedBackground = Color(0xFF1F2937)
+    val DarkChipSelectedText = Color(0xFFF9FAFB)
+    val DarkIconTint = Color(0xFFD1D5DB)
+    val DarkBadgeBackground = Color(0xFF1F2937)
+    val DarkBadgeText = Color(0xFFE5E7EB)
+
+    val CustomDarkBg = Color(0xFF0B0F19)
+    val CustomLightText = Color(0xFFF9FAFB)
+    val CustomSubText = Color(0xFF9CA3AF)
+    val CustomAccent = Color(0xFF1F2937)
 }
 
 data class PrevioColors(
-    val background: Color,
-    val surface: Color,
-    val textPrimary: Color,
-    val textSecondary: Color,
-    val border: Color,
-    val accent: Color,
-    val icon: Color
+    val screenBackground: Color,
+    val cardBackground: Color,
+    val primaryText: Color,
+    val secondaryText: Color,
+    val dividerOrBorder: Color,
+    val chipSelectedBackground: Color,
+    val chipSelectedText: Color,
+    val iconTint: Color,
+    val badgeBackground: Color,
+    val badgeText: Color
 )
 
 object PrevioDefaults {
     val LightColors = PrevioColors(
-        background = PrevioColorConstants.White,
-        surface = PrevioColorConstants.White,
-        textPrimary = PrevioColorConstants.Black,
-        textSecondary = PrevioColorConstants.LightGrayText,
-        border = PrevioColorConstants.LightBorder,
-        accent = PrevioColorConstants.LightAccent,
-        icon = PrevioColorConstants.Black
+        screenBackground = PrevioColorConstants.LightScreenBackground,
+        cardBackground = PrevioColorConstants.LightCardBackground,
+        primaryText = PrevioColorConstants.LightPrimaryText,
+        secondaryText = PrevioColorConstants.LightSecondaryText,
+        dividerOrBorder = PrevioColorConstants.LightDividerOrBorder,
+        chipSelectedBackground = PrevioColorConstants.LightChipSelectedBackground,
+        chipSelectedText = PrevioColorConstants.LightChipSelectedText,
+        iconTint = PrevioColorConstants.LightIconTint,
+        badgeBackground = PrevioColorConstants.LightBadgeBackground,
+        badgeText = PrevioColorConstants.LightBadgeText
     )
 
     val DarkColors = PrevioColors(
-        background = PrevioColorConstants.DarkCanvas,
-        surface = PrevioColorConstants.DarkSurface,
-        textPrimary = PrevioColorConstants.White,
-        textSecondary = PrevioColorConstants.DarkGrayText,
-        border = PrevioColorConstants.DarkBorder,
-        accent = PrevioColorConstants.DarkAccent,
-        icon = PrevioColorConstants.White
+        screenBackground = PrevioColorConstants.DarkScreenBackground,
+        cardBackground = PrevioColorConstants.DarkCardBackground,
+        primaryText = PrevioColorConstants.DarkPrimaryText,
+        secondaryText = PrevioColorConstants.DarkSecondaryText,
+        dividerOrBorder = PrevioColorConstants.DarkDividerOrBorder,
+        chipSelectedBackground = PrevioColorConstants.DarkChipSelectedBackground,
+        chipSelectedText = PrevioColorConstants.DarkChipSelectedText,
+        iconTint = PrevioColorConstants.DarkIconTint,
+        badgeBackground = PrevioColorConstants.DarkBadgeBackground,
+        badgeText = PrevioColorConstants.DarkBadgeText
     )
 }

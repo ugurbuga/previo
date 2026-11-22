@@ -1,6 +1,5 @@
 package com.ugurbuga.previo.runtime
 
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -11,7 +10,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -20,7 +18,6 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -37,10 +34,8 @@ import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
@@ -52,6 +47,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.composed
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -65,10 +61,15 @@ import io.github.ugurbuga.previo_runtime.generated.resources.ic_filter_list
 import io.github.ugurbuga.previo_runtime.generated.resources.ic_search
 import io.github.ugurbuga.previo_runtime.generated.resources.previo_all
 import io.github.ugurbuga.previo_runtime.generated.resources.previo_back
+import io.github.ugurbuga.previo_runtime.generated.resources.previo_category
 import io.github.ugurbuga.previo_runtime.generated.resources.previo_clear
-import io.github.ugurbuga.previo_runtime.generated.resources.previo_filter
+import io.github.ugurbuga.previo_runtime.generated.resources.previo_close
+import io.github.ugurbuga.previo_runtime.generated.resources.previo_composable_hierarchy_tree
 import io.github.ugurbuga.previo_runtime.generated.resources.previo_four_column_format
+import io.github.ugurbuga.previo_runtime.generated.resources.previo_next
 import io.github.ugurbuga.previo_runtime.generated.resources.previo_no_previews_found
+import io.github.ugurbuga.previo_runtime.generated.resources.previo_previews
+import io.github.ugurbuga.previo_runtime.generated.resources.previo_previous
 import io.github.ugurbuga.previo_runtime.generated.resources.previo_search_placeholder
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
@@ -110,19 +111,19 @@ fun PrevioTheme(
     val colors = config.getColors()
 
     val customColorScheme = config.colorScheme?.copy(
-        background = colors.background,
-        onBackground = colors.textPrimary,
-        surface = colors.surface,
-        onSurface = colors.textPrimary,
-        outline = colors.border,
-        outlineVariant = colors.border
+        background = colors.screenBackground,
+        onBackground = colors.primaryText,
+        surface = colors.cardBackground,
+        onSurface = colors.primaryText,
+        outline = colors.secondaryText.copy(alpha = 0.2f),
+        outlineVariant = colors.secondaryText.copy(alpha = 0.2f)
     ) ?: MaterialTheme.colorScheme.copy(
-        background = colors.background,
-        onBackground = colors.textPrimary,
-        surface = colors.surface,
-        onSurface = colors.textPrimary,
-        outline = colors.border,
-        outlineVariant = colors.border
+        background = colors.screenBackground,
+        onBackground = colors.primaryText,
+        surface = colors.cardBackground,
+        onSurface = colors.primaryText,
+        outline = colors.secondaryText.copy(alpha = 0.2f),
+        outlineVariant = colors.secondaryText.copy(alpha = 0.2f)
     )
 
     MaterialTheme(
@@ -136,18 +137,19 @@ fun PrevioTheme(
 @Composable
 internal fun PreviewExplorer(
     onBack: () -> Unit,
-    config: PrevioConfig = PrevioConfig()
+    config: PrevioConfig = PrevioConfig(),
+    previews: List<PreviewEntry> = remember {
+        loadGeneratedRegistry()
+        PrevioRegistry.previews
+    }
 ) {
     if (!config.enabled) {
         return
     }
 
-    val rawPreviews = remember {
-        loadGeneratedRegistry()
-        PrevioRegistry.previews
-    }
+    val rawPreviews = previews
 
-    val previews = remember(rawPreviews, config.collectPreviews) {
+    val filteredPreviewsList = remember(rawPreviews, config.collectPreviews) {
         if (config.collectPreviews) rawPreviews else emptyList()
     }
 
@@ -160,10 +162,10 @@ internal fun PreviewExplorer(
         var selectedCategory by remember { mutableStateOf<String?>(null) }
         var selectedPreviewIndex by remember { mutableStateOf<Int?>(null) }
 
-        val modeFilteredPreviews = remember(previews, viewMode) {
+        val modeFilteredPreviews = remember(filteredPreviewsList, viewMode) {
             when (viewMode) {
-                PreviewViewMode.FORMATTED -> previews.filter { isPreviewFormatted(it.name) }
-                PreviewViewMode.ALL -> previews
+                PreviewViewMode.FORMATTED -> filteredPreviewsList.filter { isPreviewFormatted(it.name) }
+                PreviewViewMode.ALL -> filteredPreviewsList
             }
         }
 
@@ -230,14 +232,15 @@ internal fun PreviewExplorer(
         }
 
         Scaffold(
-            containerColor = colors.background,
+            containerColor = colors.screenBackground,
             topBar = {
                 TopAppBar(
                     title = {
                         Text(
                             config.title,
-                            style = config.typography?.titleMedium ?: MaterialTheme.typography.titleMedium,
-                            color = colors.textPrimary
+                            style = config.typography?.titleMedium?.copy(fontWeight = androidx.compose.ui.text.font.FontWeight.Bold)
+                                ?: MaterialTheme.typography.titleMedium,
+                            color = colors.primaryText
                         )
                     },
                     navigationIcon = {
@@ -248,12 +251,12 @@ internal fun PreviewExplorer(
                             Icon(
                                 painter = painterResource(Res.drawable.ic_arrow_back),
                                 contentDescription = stringResource(Res.string.previo_back),
-                                tint = colors.icon
+                                tint = colors.iconTint
                             )
                         }
                     },
                     colors = TopAppBarDefaults.topAppBarColors(
-                        containerColor = colors.background
+                        containerColor = colors.screenBackground
                     )
                 )
             }
@@ -261,61 +264,73 @@ internal fun PreviewExplorer(
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(colors.background)
+                    .background(colors.screenBackground)
                     .padding(paddingValues)
-                    .padding(16.dp)
+                    .padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Icon(
-                        painter = painterResource(Res.drawable.ic_filter_list),
-                        contentDescription = stringResource(Res.string.previo_filter),
-                        modifier = Modifier.size(18.dp),
-                        tint = colors.icon
-                    )
                     FilterChip(
                         selected = viewMode == PreviewViewMode.FORMATTED,
                         onClick = { viewMode = PreviewViewMode.FORMATTED },
-                        label = { Text(stringResource(Res.string.previo_four_column_format) + " (${previews.count { isPreviewFormatted(it.name) }})", color = colors.textPrimary) },
+                        label = {
+                            Text(
+                                stringResource(Res.string.previo_four_column_format) + " (${
+                                    filteredPreviewsList.count {
+                                        isPreviewFormatted(
+                                            it.name
+                                        )
+                                    }
+                                })"
+                            )
+                        },
                         shape = RoundedCornerShape(4.dp),
-                        border = BorderStroke(1.dp, colors.border),
+                        border = null,
                         colors = FilterChipDefaults.filterChipColors(
-                            containerColor = colors.surface,
-                            selectedContainerColor = colors.accent,
-                            selectedLabelColor = colors.textPrimary
+                            containerColor = colors.cardBackground,
+                            labelColor = colors.secondaryText,
+                            selectedContainerColor = colors.chipSelectedBackground,
+                            selectedLabelColor = colors.chipSelectedText
                         ),
-                        modifier = Modifier.noRippleClickable { viewMode = PreviewViewMode.FORMATTED }
+                        modifier = Modifier.noRippleClickable {
+                            viewMode = PreviewViewMode.FORMATTED
+                        }
                     )
                     FilterChip(
                         selected = viewMode == PreviewViewMode.ALL,
                         onClick = { viewMode = PreviewViewMode.ALL },
-                        label = { Text(stringResource(Res.string.previo_all) + " (${previews.size})", color = colors.textPrimary) },
+                        label = { Text(stringResource(Res.string.previo_all) + " (${filteredPreviewsList.size})") },
                         shape = RoundedCornerShape(4.dp),
-                        border = BorderStroke(1.dp, colors.border),
+                        border = null,
                         colors = FilterChipDefaults.filterChipColors(
-                            containerColor = colors.surface,
-                            selectedContainerColor = colors.accent,
-                            selectedLabelColor = colors.textPrimary
+                            containerColor = colors.cardBackground,
+                            labelColor = colors.secondaryText,
+                            selectedContainerColor = colors.chipSelectedBackground,
+                            selectedLabelColor = colors.chipSelectedText
                         ),
                         modifier = Modifier.noRippleClickable { viewMode = PreviewViewMode.ALL }
                     )
                 }
 
-                Spacer(modifier = Modifier.height(12.dp))
-
                 OutlinedTextField(
                     value = searchQuery,
                     onValueChange = { searchQuery = it },
                     modifier = Modifier.fillMaxWidth(),
-                    placeholder = { Text(stringResource(Res.string.previo_search_placeholder), color = colors.textSecondary) },
+                    placeholder = {
+                        Text(
+                            stringResource(Res.string.previo_search_placeholder),
+                            color = colors.secondaryText
+                        )
+                    },
                     leadingIcon = {
                         Icon(
                             painter = painterResource(Res.drawable.ic_search),
                             contentDescription = stringResource(Res.string.previo_search_placeholder),
-                            tint = colors.icon
+                            tint = colors.iconTint
                         )
                     },
                     trailingIcon = {
@@ -327,7 +342,7 @@ internal fun PreviewExplorer(
                                 Icon(
                                     painter = painterResource(Res.drawable.ic_close),
                                     contentDescription = stringResource(Res.string.previo_clear),
-                                    tint = colors.icon
+                                    tint = colors.iconTint
                                 )
                             }
                         }
@@ -335,26 +350,25 @@ internal fun PreviewExplorer(
                     singleLine = true,
                     shape = RoundedCornerShape(4.dp),
                     colors = OutlinedTextFieldDefaults.colors(
-                        focusedContainerColor = colors.surface,
-                        unfocusedContainerColor = colors.surface,
-                        focusedBorderColor = colors.border,
-                        unfocusedBorderColor = colors.border,
-                        focusedTextColor = colors.textPrimary,
-                        unfocusedTextColor = colors.textPrimary
+                        focusedContainerColor = colors.cardBackground,
+                        unfocusedContainerColor = colors.cardBackground,
+                        focusedBorderColor = colors.primaryText,
+                        unfocusedBorderColor = Color.Transparent,
+                        focusedTextColor = colors.primaryText,
+                        unfocusedTextColor = colors.primaryText
                     )
                 )
 
-                Spacer(modifier = Modifier.height(16.dp))
-
                 if (categories.isEmpty()) {
                     Box(
-                        modifier = Modifier.fillMaxSize().background(colors.background),
+                        modifier = Modifier.fillMaxSize().background(colors.screenBackground),
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
                             stringResource(Res.string.previo_no_previews_found),
-                            style = config.typography?.bodyLarge ?: MaterialTheme.typography.bodyLarge,
-                            color = colors.textSecondary
+                            style = config.typography?.bodyLarge
+                                ?: MaterialTheme.typography.bodyLarge,
+                            color = colors.secondaryText
                         )
                     }
                 } else {
@@ -367,12 +381,12 @@ internal fun PreviewExplorer(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .noRippleClickable { selectedCategory = category.group },
-                                elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+                                elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
                                 shape = RoundedCornerShape(4.dp),
                                 colors = CardDefaults.cardColors(
-                                    containerColor = colors.surface
+                                    containerColor = colors.cardBackground
                                 ),
-                                border = BorderStroke(1.dp, colors.border)
+                                border = null
                             ) {
                                 Row(
                                     modifier = Modifier
@@ -381,29 +395,41 @@ internal fun PreviewExplorer(
                                     horizontalArrangement = Arrangement.SpaceBetween,
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
-                                    Column(modifier = Modifier.weight(1f)) {
+                                    Column(
+                                        modifier = Modifier.weight(1f),
+                                        verticalArrangement = Arrangement.spacedBy(4.dp)
+                                    ) {
                                         Text(
                                             text = category.group,
-                                            style = config.typography?.titleMedium ?: MaterialTheme.typography.titleMedium,
-                                            color = colors.textPrimary
+                                            style = config.typography?.titleMedium?.copy(fontWeight = androidx.compose.ui.text.font.FontWeight.Bold)
+                                                ?: MaterialTheme.typography.titleMedium,
+                                            color = colors.primaryText
                                         )
-                                        Spacer(modifier = Modifier.height(6.dp))
-                                        Text(
-                                            text = "${category.count} Previews",
-                                            style = config.typography?.labelSmall ?: MaterialTheme.typography.labelSmall,
-                                            color = colors.textSecondary
-                                        )
+                                        Surface(
+                                            shape = RoundedCornerShape(4.dp),
+                                            color = colors.badgeBackground
+                                        ) {
+                                            Text(
+                                                text = "${category.count} " + stringResource(Res.string.previo_previews),
+                                                modifier = Modifier.padding(
+                                                    horizontal = 6.dp,
+                                                    vertical = 2.dp
+                                                ),
+                                                style = config.typography?.labelSmall
+                                                    ?: MaterialTheme.typography.labelSmall,
+                                                color = colors.badgeText
+                                            )
+                                        }
                                     }
                                     Surface(
                                         shape = RoundedCornerShape(4.dp),
-                                        color = colors.surface,
-                                        border = BorderStroke(1.dp, colors.border)
+                                        color = colors.badgeBackground
                                     ) {
                                         Icon(
                                             painter = painterResource(Res.drawable.ic_chevron_right),
                                             contentDescription = "Navigate",
                                             modifier = Modifier.padding(8.dp),
-                                            tint = colors.icon
+                                            tint = colors.iconTint
                                         )
                                     }
                                 }
@@ -428,14 +454,15 @@ internal fun CategoryItemsScreen(
     PrevioTheme(config = config) {
         val colors = config.getColors()
         Scaffold(
-            containerColor = colors.background,
+            containerColor = colors.screenBackground,
             topBar = {
                 TopAppBar(
                     title = {
                         Text(
                             categoryName,
-                            style = config.typography?.titleMedium ?: MaterialTheme.typography.titleMedium,
-                            color = colors.textPrimary
+                            style = config.typography?.titleMedium?.copy(fontWeight = androidx.compose.ui.text.font.FontWeight.Bold)
+                                ?: MaterialTheme.typography.titleMedium,
+                            color = colors.primaryText
                         )
                     },
                     navigationIcon = {
@@ -445,13 +472,13 @@ internal fun CategoryItemsScreen(
                         ) {
                             Icon(
                                 painter = painterResource(Res.drawable.ic_arrow_back),
-                                contentDescription = "Back",
-                                tint = colors.icon
+                                contentDescription = stringResource(Res.string.previo_back),
+                                tint = colors.iconTint
                             )
                         }
                     },
                     colors = TopAppBarDefaults.topAppBarColors(
-                        containerColor = colors.background
+                        containerColor = colors.screenBackground
                     )
                 )
             }
@@ -459,16 +486,19 @@ internal fun CategoryItemsScreen(
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(colors.background)
+                    .background(colors.screenBackground)
                     .padding(paddingValues)
                     .padding(16.dp)
             ) {
                 if (previews.isEmpty()) {
                     Box(
-                        modifier = Modifier.fillMaxSize().background(colors.background),
+                        modifier = Modifier.fillMaxSize().background(colors.screenBackground),
                         contentAlignment = Alignment.Center
                     ) {
-                        Text("No previews in this category.", color = colors.textSecondary)
+                        Text(
+                            stringResource(Res.string.previo_no_previews_found),
+                            color = colors.secondaryText
+                        )
                     }
                 } else {
                     LazyColumn(
@@ -480,12 +510,12 @@ internal fun CategoryItemsScreen(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .noRippleClickable { onPreviewClick(index) },
-                                elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+                                elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
                                 shape = RoundedCornerShape(4.dp),
                                 colors = CardDefaults.cardColors(
-                                    containerColor = colors.surface
+                                    containerColor = colors.cardBackground
                                 ),
-                                border = BorderStroke(1.dp, colors.border)
+                                border = null
                             ) {
                                 Row(
                                     modifier = Modifier
@@ -494,29 +524,41 @@ internal fun CategoryItemsScreen(
                                     horizontalArrangement = Arrangement.SpaceBetween,
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
-                                    Column(modifier = Modifier.weight(1f)) {
+                                    Column(
+                                        modifier = Modifier.weight(1f),
+                                        verticalArrangement = Arrangement.spacedBy(4.dp)
+                                    ) {
                                         Text(
                                             text = entry.alphabeticalOrder.ifBlank { entry.name },
-                                            style = config.typography?.titleSmall ?: MaterialTheme.typography.titleSmall,
-                                            color = colors.textPrimary
+                                            style = config.typography?.titleSmall?.copy(fontWeight = androidx.compose.ui.text.font.FontWeight.Bold)
+                                                ?: MaterialTheme.typography.titleSmall,
+                                            color = colors.primaryText
                                         )
-                                        Spacer(modifier = Modifier.height(4.dp))
-                                        Text(
-                                            text = entry.customInfo.ifBlank { "Default" },
-                                            style = config.typography?.labelSmall ?: MaterialTheme.typography.labelSmall,
-                                            color = colors.textSecondary
-                                        )
+                                        Surface(
+                                            shape = RoundedCornerShape(4.dp),
+                                            color = colors.badgeBackground
+                                        ) {
+                                            Text(
+                                                text = entry.customInfo.ifBlank { "Default" },
+                                                modifier = Modifier.padding(
+                                                    horizontal = 6.dp,
+                                                    vertical = 2.dp
+                                                ),
+                                                style = config.typography?.labelSmall
+                                                    ?: MaterialTheme.typography.labelSmall,
+                                                color = colors.badgeText
+                                            )
+                                        }
                                     }
                                     Surface(
                                         shape = RoundedCornerShape(4.dp),
-                                        color = colors.surface,
-                                        border = BorderStroke(1.dp, colors.border)
+                                        color = colors.badgeBackground
                                     ) {
                                         Icon(
                                             painter = painterResource(Res.drawable.ic_chevron_right),
                                             contentDescription = "View",
                                             modifier = Modifier.padding(8.dp),
-                                            tint = colors.icon
+                                            tint = colors.iconTint
                                         )
                                     }
                                 }
@@ -544,30 +586,33 @@ internal fun PreviewDetailPagerScreen(
         val currentPreview = previews.getOrNull(currentIndex)
 
         Scaffold(
-            containerColor = colors.background,
+            containerColor = colors.screenBackground,
             topBar = {
                 TopAppBar(
                     title = {
                         Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
                             Text(
-                                (currentPreview?.alphabeticalOrder?.ifBlank { currentPreview.name }) ?: "Preview",
-                                style = config.typography?.titleMedium ?: MaterialTheme.typography.titleMedium,
-                                color = colors.textPrimary,
-                                fontWeight = androidx.compose.ui.text.font.FontWeight.Bold
+                                (currentPreview?.alphabeticalOrder?.ifBlank { currentPreview.name })
+                                    ?: "Preview",
+                                style = config.typography?.titleMedium?.copy(fontWeight = androidx.compose.ui.text.font.FontWeight.Bold)
+                                    ?: MaterialTheme.typography.titleMedium,
+                                color = colors.primaryText
                             )
                             if (currentPreview != null) {
                                 if (currentPreview.group.isNotBlank()) {
                                     Text(
-                                        text = "Category: ${currentPreview.group}",
-                                        style = config.typography?.labelSmall ?: MaterialTheme.typography.labelSmall,
-                                        color = colors.textSecondary
+                                        text = stringResource(Res.string.previo_category) + ": ${currentPreview.group}",
+                                        style = config.typography?.labelSmall
+                                            ?: MaterialTheme.typography.labelSmall,
+                                        color = colors.secondaryText
                                     )
                                 }
                                 if (currentPreview.customInfo.isNotBlank()) {
                                     Text(
-                                        text = "Info: ${currentPreview.customInfo}",
-                                        style = config.typography?.labelSmall ?: MaterialTheme.typography.labelSmall,
-                                        color = colors.textSecondary
+                                        text = currentPreview.customInfo,
+                                        style = config.typography?.labelSmall
+                                            ?: MaterialTheme.typography.labelSmall,
+                                        color = colors.secondaryText
                                     )
                                 }
                             }
@@ -580,8 +625,8 @@ internal fun PreviewDetailPagerScreen(
                         ) {
                             Icon(
                                 painter = painterResource(Res.drawable.ic_arrow_back),
-                                contentDescription = "Back",
-                                tint = colors.icon
+                                contentDescription = stringResource(Res.string.previo_back),
+                                tint = colors.iconTint
                             )
                         }
                     },
@@ -589,18 +634,20 @@ internal fun PreviewDetailPagerScreen(
                         if (config.collectHierarchyTree && currentPreview != null && currentPreview.composableNode != null) {
                             IconButton(
                                 onClick = { showTreeView = !showTreeView },
-                                modifier = Modifier.noRippleClickable { showTreeView = !showTreeView }
+                                modifier = Modifier.noRippleClickable {
+                                    showTreeView = !showTreeView
+                                }
                             ) {
                                 Icon(
                                     painter = painterResource(Res.drawable.ic_filter_list),
-                                    contentDescription = "Toggle Function Tree",
-                                    tint = colors.icon
+                                    contentDescription = stringResource(Res.string.previo_composable_hierarchy_tree),
+                                    tint = colors.iconTint
                                 )
                             }
                         }
                     },
                     colors = TopAppBarDefaults.topAppBarColors(
-                        containerColor = colors.background
+                        containerColor = colors.screenBackground
                     )
                 )
             }
@@ -609,7 +656,7 @@ internal fun PreviewDetailPagerScreen(
                 Column(
                     modifier = Modifier
                         .fillMaxSize()
-                        .background(colors.background)
+                        .background(colors.screenBackground)
                         .padding(paddingValues)
                         .padding(16.dp),
                     verticalArrangement = Arrangement.spacedBy(16.dp)
@@ -617,7 +664,11 @@ internal fun PreviewDetailPagerScreen(
                     Box(
                         modifier = Modifier.weight(1f)
                     ) {
-                        PreviewContentContainer(preview = currentPreview, page = currentIndex, colors = colors)
+                        PreviewContentContainer(
+                            preview = currentPreview,
+                            page = currentIndex,
+                            colors = colors
+                        )
 
                         if (config.collectHierarchyTree && showTreeView && currentPreview.composableNode != null) {
                             Surface(
@@ -625,15 +676,16 @@ internal fun PreviewDetailPagerScreen(
                                     .fillMaxSize()
                                     .zIndex(5f),
                                 shape = RoundedCornerShape(4.dp),
-                                color = colors.surface.copy(alpha = 0.9f),
-                                border = BorderStroke(1.dp, colors.border),
+                                color = colors.cardBackground,
+                                border = null,
                                 tonalElevation = 4.dp
                             ) {
                                 Column(
                                     modifier = Modifier
                                         .fillMaxSize()
                                         .verticalScroll(rememberScrollState())
-                                        .padding(16.dp)
+                                        .padding(16.dp),
+                                    verticalArrangement = Arrangement.spacedBy(12.dp)
                                 ) {
                                     Row(
                                         modifier = Modifier.fillMaxWidth(),
@@ -641,23 +693,24 @@ internal fun PreviewDetailPagerScreen(
                                         verticalAlignment = Alignment.CenterVertically
                                     ) {
                                         Text(
-                                            text = "Composable Hierarchy Tree",
-                                            style = config.typography?.titleMedium ?: MaterialTheme.typography.titleMedium,
-                                            color = colors.textPrimary,
-                                            fontWeight = androidx.compose.ui.text.font.FontWeight.Bold
+                                            text = stringResource(Res.string.previo_composable_hierarchy_tree),
+                                            style = config.typography?.titleSmall?.copy(fontWeight = androidx.compose.ui.text.font.FontWeight.Bold)
+                                                ?: MaterialTheme.typography.titleSmall,
+                                            color = colors.primaryText
                                         )
                                         IconButton(
                                             onClick = { showTreeView = false },
-                                            modifier = Modifier.noRippleClickable { showTreeView = false }
+                                            modifier = Modifier.noRippleClickable {
+                                                showTreeView = false
+                                            }
                                         ) {
                                             Icon(
                                                 painter = painterResource(Res.drawable.ic_close),
-                                                contentDescription = "Close",
-                                                tint = colors.icon
+                                                contentDescription = stringResource(Res.string.previo_close),
+                                                tint = colors.iconTint
                                             )
                                         }
                                     }
-                                    Spacer(modifier = Modifier.height(12.dp))
                                     ComposableTreeView(
                                         node = currentPreview.composableNode,
                                         colors = colors,
@@ -668,57 +721,71 @@ internal fun PreviewDetailPagerScreen(
                         }
                     }
 
+                    // Bottom Navigation Bar with explicit Active vs Disabled states
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
+                        val prevEnabled = currentIndex > 0
+                        val nextEnabled = currentIndex < previews.lastIndex
+
                         OutlinedButton(
-                            onClick = { if (currentIndex > 0) currentIndex-- },
-                            enabled = currentIndex > 0,
+                            onClick = { if (prevEnabled) currentIndex-- },
+                            enabled = prevEnabled,
                             shape = RoundedCornerShape(4.dp),
-                            border = BorderStroke(1.dp, colors.border),
-                            colors = ButtonDefaults.outlinedButtonColors(contentColor = colors.textPrimary),
-                            modifier = Modifier.noRippleClickable { if (currentIndex > 0) currentIndex-- }
+                            border = null,
+                            colors = ButtonDefaults.outlinedButtonColors(
+                                containerColor = if (prevEnabled) colors.cardBackground else colors.cardBackground.copy(
+                                    alpha = 0.4f
+                                ),
+                                contentColor = if (prevEnabled) colors.primaryText else colors.secondaryText
+                            ),
+                            modifier = Modifier.noRippleClickable { if (prevEnabled) currentIndex-- }
                         ) {
                             Icon(
-                                painter = painterResource(Res.drawable.ic_arrow_back),
+                                painter = painterResource(Res.drawable.ic_chevron_right),
                                 contentDescription = null,
-                                modifier = Modifier.size(16.dp),
-                                tint = colors.icon
+                                modifier = Modifier.size(16.dp).rotate(180f),
+                                tint = if (prevEnabled) colors.iconTint else colors.secondaryText
                             )
                             Spacer(modifier = Modifier.width(6.dp))
-                            Text("Previous", color = colors.textPrimary)
+                            Text(stringResource(Res.string.previo_previous))
                         }
 
                         Surface(
                             shape = RoundedCornerShape(4.dp),
-                            color = colors.surface,
-                            border = BorderStroke(1.dp, colors.border)
+                            color = colors.badgeBackground
                         ) {
                             Text(
                                 text = "${currentIndex + 1} / ${previews.size}",
-                                modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
-                                style = config.typography?.labelMedium ?: MaterialTheme.typography.labelMedium,
-                                color = colors.textPrimary
+                                modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+                                style = config.typography?.labelMedium?.copy(fontWeight = androidx.compose.ui.text.font.FontWeight.Bold)
+                                    ?: MaterialTheme.typography.labelMedium,
+                                color = colors.badgeText
                             )
                         }
 
                         OutlinedButton(
-                            onClick = { if (currentIndex < previews.lastIndex) currentIndex++ },
-                            enabled = currentIndex < previews.lastIndex,
+                            onClick = { if (nextEnabled) currentIndex++ },
+                            enabled = nextEnabled,
                             shape = RoundedCornerShape(4.dp),
-                            border = BorderStroke(1.dp, colors.border),
-                            colors = ButtonDefaults.outlinedButtonColors(contentColor = colors.textPrimary),
-                            modifier = Modifier.noRippleClickable { if (currentIndex < previews.lastIndex) currentIndex++ }
+                            border = null,
+                            colors = ButtonDefaults.outlinedButtonColors(
+                                containerColor = if (nextEnabled) colors.cardBackground else colors.cardBackground.copy(
+                                    alpha = 0.4f
+                                ),
+                                contentColor = if (nextEnabled) colors.primaryText else colors.secondaryText
+                            ),
+                            modifier = Modifier.noRippleClickable { if (nextEnabled) currentIndex++ }
                         ) {
-                            Text("Next", color = colors.textPrimary)
+                            Text(stringResource(Res.string.previo_next))
                             Spacer(modifier = Modifier.width(6.dp))
                             Icon(
                                 painter = painterResource(Res.drawable.ic_chevron_right),
                                 contentDescription = null,
                                 modifier = Modifier.size(16.dp),
-                                tint = colors.icon
+                                tint = if (nextEnabled) colors.iconTint else colors.secondaryText
                             )
                         }
                     }
@@ -751,7 +818,8 @@ private fun PreviewContentContainer(
         println("[Previo Explorer] Active Preview Displayed: ${preview.name} (id: ${preview.id})")
     }
 
-    val previewBg = if (preview.backgroundColor != null) toComposeColor(preview.backgroundColor) else Color.White
+    val previewBg =
+        if (preview.backgroundColor != null) toComposeColor(preview.backgroundColor) else Color.White
 
     key(preview.id, page) {
         Surface(
@@ -759,10 +827,7 @@ private fun PreviewContentContainer(
             tonalElevation = 0.dp,
             shape = RoundedCornerShape(4.dp),
             color = previewBg,
-            border = BorderStroke(
-                1.dp,
-                colors.border
-            )
+            border = null
         ) {
             Box(
                 modifier = Modifier.fillMaxSize().background(previewBg),
@@ -776,8 +841,8 @@ private fun PreviewContentContainer(
                         onSurface = Color.Black
                     )
                 ) {
-                    androidx.compose.runtime.CompositionLocalProvider(
-                        androidx.compose.material3.LocalContentColor provides Color.Black
+                    CompositionLocalProvider(
+                        LocalContentColor provides Color.Black
                     ) {
                         if (preview.isVerticallyScrollable) {
                             Box(
@@ -818,38 +883,40 @@ fun ComposableTreeView(
 ) {
     var isExpanded by remember { mutableStateOf(true) }
 
-    Column(modifier = Modifier.fillMaxWidth().padding(start = 4.dp)) {
+    Column(modifier = Modifier.fillMaxWidth().padding(start = 2.dp)) {
         Row(
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 3.dp),
+                .fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Surface(
                 modifier = Modifier
-                    .noRippleClickable { if (!node.isNative && node.children.isNotEmpty()) isExpanded = !isExpanded },
+                    .noRippleClickable {
+                        if (!node.isNative && node.children.isNotEmpty()) isExpanded = !isExpanded
+                    }.padding(bottom = 2.dp),
                 shape = RoundedCornerShape(4.dp),
-                color = if (node.isNative) colors.surface else colors.accent,
-                border = BorderStroke(1.dp, colors.border)
+                color = if (node.isNative) colors.chipSelectedBackground.copy(alpha = 0.5f) else colors.chipSelectedBackground,
+                border = null
             ) {
                 Row(
                     modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(6.dp)
                 ) {
+                    Text(
+                        text = node.name,
+                        style = config.typography?.labelMedium?.copy(fontWeight = androidx.compose.ui.text.font.FontWeight.Medium)
+                            ?: MaterialTheme.typography.labelMedium,
+                        color = colors.primaryText
+                    )
                     if (!node.isNative && node.children.isNotEmpty()) {
                         Icon(
                             painter = painterResource(if (isExpanded) Res.drawable.ic_chevron_down else Res.drawable.ic_chevron_right),
                             contentDescription = if (isExpanded) "Collapse" else "Expand",
                             modifier = Modifier.size(14.dp),
-                            tint = colors.icon
+                            tint = colors.iconTint
                         )
                     }
-                    Text(
-                        text = node.name,
-                        style = config.typography?.labelSmall ?: MaterialTheme.typography.labelSmall,
-                        color = colors.textPrimary
-                    )
                 }
             }
         }
@@ -859,23 +926,275 @@ fun ComposableTreeView(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(start = 8.dp),
-                verticalArrangement = Arrangement.spacedBy(4.dp)
             ) {
                 node.children.forEach { child ->
-                    ComposableTreeView(node = child, colors = colors, config = config, depth = depth + 1)
+                    ComposableTreeView(
+                        node = child,
+                        colors = colors,
+                        config = config,
+                        depth = depth + 1
+                    )
                 }
             }
         }
     }
 }
 
-@Preview(name = "Previo Explorer Light Preview", showBackground = true, backgroundColor = 0xFFFFFF)
+// ==================== Previo Runtime Previews (Light & Dark for all 4 screens) ====================
+
+private val sampleCatalogEntries = listOf(
+    PreviewEntry(
+        id = "com.ugurbuga.previo.LongSettingsScreenPreview",
+        name = "[Screens] [1] [Settings] [Full]",
+        group = "Screens",
+        order = 1,
+        alphabeticalOrder = "Settings",
+        customInfo = "Column, Row, Card",
+        content = { Text("Settings Content") }
+    ),
+    PreviewEntry(
+        id = "com.ugurbuga.previo.CryptoDashboardScreenPreview",
+        name = "[Screens] [5] [Dashboard] [Crypto]",
+        group = "Screens",
+        order = 5,
+        alphabeticalOrder = "Dashboard",
+        customInfo = "Card, Row",
+        content = { Text("Dashboard Content") }
+    ),
+    PreviewEntry(
+        id = "com.ugurbuga.previo.VerticalScrollSamplePreview",
+        name = "[ScrollSamples] [1] [VerticalScroll] [VerticalScroll]",
+        group = "ScrollSamples",
+        order = 1,
+        alphabeticalOrder = "VerticalScroll",
+        customInfo = "Column (scrollable)",
+        content = { Text("Scroll Content") }
+    )
+)
+
+private val sampleNodeForTree = ComposableNode(
+    name = "LongSettingsScreenPreview",
+    isNative = false,
+    children = listOf(
+        ComposableNode(
+            "Column", false, listOf(
+                ComposableNode("Text", true),
+                ComposableNode(
+                    "Card", false, listOf(
+                        ComposableNode(
+                            "Column", false, listOf(
+                                ComposableNode("Text", true),
+                                ComposableNode("HorizontalDivider", true)
+                            )
+                        )
+                    )
+                )
+            )
+        )
+    )
+)
+
+// 1. Previo Explorer (Light & Dark)
+@Preview(
+    name = "Light - Previo Explorer",
+    group = "1. Explorer",
+    showBackground = true,
+    backgroundColor = 0xFFF8FAFC
+)
 @Composable
-fun PreviewExplorerMockPreview() {
-    PrevioTheme(config = PrevioConfig(title = "Component Catalog", isDarkTheme = false)) {
-        Surface(modifier = Modifier.fillMaxSize()) {
-            Column(modifier = Modifier.padding(16.dp)) {
-                Text("Mock Previo Explorer Screen")
+fun PreviewExplorerPopulatedLightPreview() {
+    PreviewExplorer(
+        onBack = {},
+        config = PrevioConfig(title = "Previo Component Catalog", isDarkTheme = false),
+        previews = sampleCatalogEntries
+    )
+}
+
+@Preview(
+    name = "Dark - Previo Explorer",
+    group = "1. Explorer",
+    showBackground = true,
+    backgroundColor = 0x0B0F19
+)
+@Composable
+fun PreviewExplorerPopulatedDarkPreview() {
+    PreviewExplorer(
+        onBack = {},
+        config = PrevioConfig(title = "Previo Component Catalog", isDarkTheme = true),
+        previews = sampleCatalogEntries
+    )
+}
+
+// 2. Category Items Screen (Light & Dark)
+@Preview(
+    name = "Light - Category Items Screen",
+    group = "2. Category",
+    showBackground = true,
+    backgroundColor = 0xFFF8FAFC
+)
+@Composable
+fun CategoryItemsScreenLightPreview() {
+    CategoryItemsScreen(
+        categoryName = "Screens",
+        previews = sampleCatalogEntries,
+        onBack = {},
+        onPreviewClick = {},
+        config = PrevioConfig(isDarkTheme = false)
+    )
+}
+
+@Preview(
+    name = "Dark - Category Items Screen",
+    group = "2. Category",
+    showBackground = true,
+    backgroundColor = 0x0B0F19
+)
+@Composable
+fun CategoryItemsScreenDarkPreview() {
+    CategoryItemsScreen(
+        categoryName = "Screens",
+        previews = sampleCatalogEntries,
+        onBack = {},
+        onPreviewClick = {},
+        config = PrevioConfig(isDarkTheme = true)
+    )
+}
+
+// 3. Detail Pager Screen (Light & Dark)
+@Preview(
+    name = "Light - Detail Pager Screen",
+    group = "3. Detail",
+    showBackground = true,
+    backgroundColor = 0xFFF8FAFC
+)
+@Composable
+fun PreviewExplorerDetailLightPreview() {
+    PreviewDetailPagerScreen(
+        previews = sampleCatalogEntries,
+        initialIndex = 0,
+        onBack = {},
+        config = PrevioConfig(isDarkTheme = false)
+    )
+}
+
+@Preview(
+    name = "Dark - Detail Pager Screen",
+    group = "3. Detail",
+    showBackground = true,
+    backgroundColor = 0x0B0F19
+)
+@Composable
+fun PreviewExplorerDetailDarkPreview() {
+    PreviewDetailPagerScreen(
+        previews = sampleCatalogEntries,
+        initialIndex = 0,
+        onBack = {},
+        config = PrevioConfig(isDarkTheme = true)
+    )
+}
+
+// 4. Detail Pager Screen with Hierarchy Tree Open (Light & Dark)
+@Preview(
+    name = "Light - Detail with Hierarchy Tree",
+    group = "4. Detail Tree",
+    showBackground = true,
+    backgroundColor = 0xFFF8FAFC
+)
+@Composable
+fun PreviewExplorerDetailTreeLightPreview() {
+    val treeEntries = listOf(
+        sampleCatalogEntries.first().copy(composableNode = sampleNodeForTree)
+    )
+    val colors = PrevioDefaults.LightColors
+
+    PrevioTheme(config = PrevioConfig(isDarkTheme = false)) {
+        Box(modifier = Modifier.fillMaxSize()) {
+            PreviewDetailPagerScreen(
+                previews = treeEntries,
+                initialIndex = 0,
+                onBack = {},
+                config = PrevioConfig(isDarkTheme = false)
+            )
+            Surface(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .zIndex(5f),
+                shape = RoundedCornerShape(4.dp),
+                color = colors.cardBackground.copy(alpha = 0.95f),
+                border = null,
+                tonalElevation = 4.dp
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .verticalScroll(rememberScrollState())
+                        .padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    Text(
+                        text = stringResource(Res.string.previo_composable_hierarchy_tree),
+                        style = MaterialTheme.typography.titleSmall.copy(fontWeight = androidx.compose.ui.text.font.FontWeight.Bold),
+                        color = colors.primaryText
+                    )
+                    ComposableTreeView(
+                        node = sampleNodeForTree,
+                        colors = colors,
+                        config = PrevioConfig(isDarkTheme = false)
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Preview(
+    name = "Dark - Detail with Hierarchy Tree",
+    group = "4. Detail Tree",
+    showBackground = true,
+    backgroundColor = 0x0B0F19
+)
+@Composable
+fun PreviewExplorerDetailTreeDarkPreview() {
+    val treeEntries = listOf(
+        sampleCatalogEntries.first().copy(composableNode = sampleNodeForTree)
+    )
+    val colors = PrevioDefaults.DarkColors
+
+    PrevioTheme(config = PrevioConfig(isDarkTheme = true)) {
+        Box(modifier = Modifier.fillMaxSize()) {
+            PreviewDetailPagerScreen(
+                previews = treeEntries,
+                initialIndex = 0,
+                onBack = {},
+                config = PrevioConfig(isDarkTheme = true)
+            )
+            Surface(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .zIndex(5f),
+                shape = RoundedCornerShape(4.dp),
+                color = colors.cardBackground.copy(alpha = 0.95f),
+                border = null,
+                tonalElevation = 4.dp
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .verticalScroll(rememberScrollState())
+                        .padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    Text(
+                        text = stringResource(Res.string.previo_composable_hierarchy_tree),
+                        style = MaterialTheme.typography.titleSmall.copy(fontWeight = androidx.compose.ui.text.font.FontWeight.Bold),
+                        color = colors.primaryText
+                    )
+                    ComposableTreeView(
+                        node = sampleNodeForTree,
+                        colors = colors,
+                        config = PrevioConfig(isDarkTheme = true)
+                    )
+                }
             }
         }
     }

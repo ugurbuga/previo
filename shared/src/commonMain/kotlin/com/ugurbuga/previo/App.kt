@@ -102,13 +102,16 @@ fun App() {
                                     activeConfig = PrevioConfig(
                                         title = "Previo (Custom Color)",
                                         colors = PrevioColors(
-                                            background = PrevioColorConstants.CustomDarkBg,
-                                            surface = PrevioColorConstants.CustomDarkBg,
-                                            textPrimary = PrevioColorConstants.CustomLightText,
-                                            textSecondary = PrevioColorConstants.CustomSubText,
-                                            border = PrevioColorConstants.CustomLightText,
-                                            accent = PrevioColorConstants.CustomAccent,
-                                            icon = PrevioColorConstants.CustomLightText
+                                            screenBackground = PrevioColorConstants.CustomDarkBg,
+                                            cardBackground = PrevioColorConstants.CustomDarkBg,
+                                            primaryText = PrevioColorConstants.CustomLightText,
+                                            secondaryText = PrevioColorConstants.CustomSubText,
+                                            dividerOrBorder = PrevioColorConstants.CustomLightText,
+                                            chipSelectedBackground = PrevioColorConstants.CustomAccent,
+                                            chipSelectedText = PrevioColorConstants.CustomLightText,
+                                            iconTint = PrevioColorConstants.CustomLightText,
+                                            badgeBackground = PrevioColorConstants.CustomAccent,
+                                            badgeText = PrevioColorConstants.CustomLightText
                                         ),
                                         colorScheme = colorScheme,
                                         typography = typography,

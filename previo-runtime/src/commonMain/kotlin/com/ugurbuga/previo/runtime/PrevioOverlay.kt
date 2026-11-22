@@ -13,6 +13,11 @@ fun PrevioOverlay(
     config: PrevioConfig = PrevioConfig(),
     content: @Composable () -> Unit
 ) {
+    if (!config.enabled) {
+        content()
+        return
+    }
+
     val isPrevioOpen by Previo.isPrevioOpen.collectAsState()
     val colors = config.getColors()
 
@@ -21,7 +26,7 @@ fun PrevioOverlay(
     }
 
     if (isPrevioOpen) {
-        Box(modifier = Modifier.fillMaxSize().background(colors.background)) {
+        Box(modifier = Modifier.fillMaxSize().background(colors.screenBackground)) {
             PreviewExplorer(
                 onBack = { Previo.dismiss() },
                 config = config
