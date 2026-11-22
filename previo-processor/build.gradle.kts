@@ -34,8 +34,8 @@ mavenPublishing {
         developers {
             developer {
                 id.set("ugurbuga")
-                name.set("Ugur Buga")
-                email.set("ugurbuga@gmail.com")
+                name.set("Uğur Buğa")
+                email.set("ugurbuga00@gmail.com")
             }
         }
         scm {
