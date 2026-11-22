@@ -844,28 +844,14 @@ private fun PreviewContentContainer(
                     CompositionLocalProvider(
                         LocalContentColor provides Color.Black
                     ) {
-                        if (preview.isVerticallyScrollable) {
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxSize()
-                                    .background(previewBg)
-                                    .padding(16.dp),
-                                contentAlignment = Alignment.TopCenter
-                            ) {
-                                preview.content()
-                            }
-                        } else {
-                            val scrollState = rememberScrollState()
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxSize()
-                                    .background(previewBg)
-                                    .verticalScroll(scrollState)
-                                    .padding(16.dp),
-                                contentAlignment = Alignment.TopCenter
-                            ) {
-                                preview.content()
-                            }
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .background(previewBg)
+                                .padding(16.dp),
+                            contentAlignment = Alignment.TopCenter
+                        ) {
+                            preview.content()
                         }
                     }
                 }
