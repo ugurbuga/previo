@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="previo_back">Back</string>
+    <string name="previo_filter">Filter</string>
+    <string name="previo_four_column_format">4-Column Format</string>
+    <string name="previo_all">All</string>
+    <string name="previo_search_placeholder">Search categories or previews...</string>
+    <string name="previo_clear">Clear</string>
+    <string name="previo_no_previews_found">No previews found.</string>
+    <string name="previo_previews">Previews</string>
+    <string name="previo_order">Order</string>
+    <string name="previo_no_previews_in_category">No previews in this category.</string>
+    <string name="previo_group">Group</string>
+    <string name="previo_category">Category</string>
+    <string name="previo_info">Info</string>
+    <string name="previo_previous">Previous</string>
+    <string name="previo_next">Next</string>
+    <string name="previo_close">Close</string>
+    <string name="previo_composable_hierarchy_tree">Composable Hierarchy Tree</string>
+</resources>

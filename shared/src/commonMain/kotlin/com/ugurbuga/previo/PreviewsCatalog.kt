@@ -16,7 +16,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 
-@Preview(name = "[Screens] [1] [Settings] [Full]")
+@Preview(name = "[Screens] [1] [Settings] [Full]", showBackground = true, backgroundColor = 0xFFFFFF)
 @Composable
 fun LongSettingsScreenPreview() {
     Column(
@@ -75,7 +75,7 @@ fun LongSettingsScreenPreview() {
     }
 }
 
-@Preview(name = "[Screens] [2] [Profile] [Detailed]")
+@Preview(name = "[Screens] [2] [Profile] [Detailed]", showBackground = true, backgroundColor = 0xFFFFFF)
 @Composable
 fun DetailedProfileScreenPreview() {
     Column(
@@ -134,7 +134,7 @@ fun DetailedProfileScreenPreview() {
     }
 }
 
-@Preview(name = "[Screens] [3] [Form] [Interactive]")
+@Preview(name = "[Screens] [3] [Form] [Interactive]", showBackground = true, backgroundColor = 0xFFFFFF)
 @Composable
 fun FormInputScreenPreview() {
     Column(
@@ -196,7 +196,7 @@ fun FormInputScreenPreview() {
     }
 }
 
-@Preview(name = "[Screens] [4] [Checkout] [OrderSummary]")
+@Preview(name = "[Screens] [4] [Checkout] [OrderSummary]", showBackground = true, backgroundColor = 0xFFFFFF)
 @Composable
 fun EcommerceCheckoutScreenPreview() {
     Column(
@@ -278,7 +278,7 @@ fun EcommerceCheckoutScreenPreview() {
     }
 }
 
-@Preview(name = "[Screens] [5] [Dashboard] [Crypto]")
+@Preview(name = "[Screens] [5] [Dashboard] [Crypto]", showBackground = true, backgroundColor = 0xFFFFFF)
 @Composable
 fun CryptoDashboardScreenPreview() {
     Column(
@@ -338,7 +338,7 @@ fun CryptoDashboardScreenPreview() {
     }
 }
 
-@Preview(name = "[Screens] [6] [Feed] [Social]")
+@Preview(name = "[Screens] [6] [Feed] [Social]", showBackground = true, backgroundColor = 0xFFFFFF)
 @Composable
 fun SocialFeedScreenPreview() {
     Column(
@@ -425,7 +425,7 @@ fun SocialFeedScreenPreview() {
     }
 }
 
-@Preview(name = "[ScrollSamples] [1] [VerticalScroll] [VerticalScroll]")
+@Preview(name = "[ScrollSamples] [1] [VerticalScroll] [VerticalScroll]", showBackground = true, backgroundColor = 0xFFFFFF)
 @Composable
 fun VerticalScrollSamplePreview() {
     val scrollState = rememberScrollState()
@@ -447,7 +447,7 @@ fun VerticalScrollSamplePreview() {
     }
 }
 
-@Preview(name = "[ScrollSamples] [2] [HorizontalScroll] [HorizontalScroll]")
+@Preview(name = "[ScrollSamples] [2] [HorizontalScroll] [HorizontalScroll]", showBackground = true, backgroundColor = 0xFFFFFF)
 @Composable
 fun HorizontalScrollSamplePreview() {
     val scrollState = rememberScrollState()
@@ -473,7 +473,7 @@ fun HorizontalScrollSamplePreview() {
     }
 }
 
-@Preview(name = "[ScrollSamples] [3] [LazyRow] [LazyRow]")
+@Preview(name = "[ScrollSamples] [3] [LazyRow] [LazyRow]", showBackground = true, backgroundColor = 0xFFFFFF)
 @Composable
 fun LazyRowSamplePreview() {
     Column(
@@ -496,7 +496,7 @@ fun LazyRowSamplePreview() {
     }
 }
 
-@Preview(name = "[Screens] [12] [LazyGrid] [LazyVerticalGrid]")
+@Preview(name = "[Screens] [12] [LazyGrid] [LazyVerticalGrid]", showBackground = true, backgroundColor = 0xFFFFFF)
 @Composable
 fun LazyGridSamplePreview() {
     Column(
@@ -521,7 +521,7 @@ fun LazyGridSamplePreview() {
     }
 }
 
-@Preview(name = "[Screens] [7] [LazyList] [LazyColumn]")
+@Preview(name = "[Screens] [7] [LazyList] [LazyColumn]", showBackground = true, backgroundColor = 0xFFFFFF)
 @Composable
 fun InfiniteLazyListScreenPreview() {
     Column(
@@ -566,7 +566,7 @@ fun InfiniteLazyListScreenPreview() {
     }
 }
 
-@Preview(name = "[Screens] [8] [Settings] [Default]")
+@Preview(name = "[Screens] [8] [Settings] [Default]", showBackground = true, backgroundColor = 0xFFFFFF)
 @Composable
 fun SettingsInternalScrollScreenPreview() {
     Column(
@@ -594,7 +594,7 @@ fun SettingsInternalScrollScreenPreview() {
     }
 }
 
-@Preview(name = "[Screens] [9] [Transactions] [LazyColumn]")
+@Preview(name = "[Screens] [9] [Transactions] [LazyColumn]", showBackground = true, backgroundColor = 0xFFFFFF)
 @Composable
 fun TransactionsLazyListScreenPreview() {
     Column(
@@ -633,13 +633,77 @@ fun TransactionsLazyListScreenPreview() {
     }
 }
 
-@Preview(name = "[Screens] [10] [Transactions] [LazyColumn]")
+@Composable
+fun StatItem(title: String, value: String) {
+    Card(modifier = Modifier.width(100.dp).height(70.dp), shape = RoundedCornerShape(4.dp)) {
+        Column(modifier = Modifier.padding(8.dp), verticalArrangement = Arrangement.Center, horizontalAlignment = Alignment.CenterHorizontally) {
+            Text(title, style = MaterialTheme.typography.labelSmall)
+            Text(value, style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.primary)
+        }
+    }
+}
+
+@Composable
+fun StatsRowSection() {
+    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        StatItem("Revenue", "$12.4K")
+        StatItem("Users", "+1.2K")
+        StatItem("Growth", "24.8%")
+    }
+}
+
+@Composable
+fun UserProfileCardSection() {
+    Card(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(4.dp)) {
+        Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Text("Welcome back, Ugur!", style = MaterialTheme.typography.titleMedium)
+            Text("Here is your daily system performance overview.", style = MaterialTheme.typography.bodySmall)
+            Spacer(modifier = Modifier.height(4.dp))
+            StatsRowSection()
+        }
+    }
+}
+
+@Composable
+fun DashboardHeaderSection() {
+    Column(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+            Text("Enterprise Console", style = MaterialTheme.typography.headlineSmall, color = MaterialTheme.colorScheme.primary)
+            Switch(checked = true, onCheckedChange = {})
+        }
+        UserProfileCardSection()
+    }
+}
+
+@Preview(name = "[Screens] [13] [Dashboard] [DeepNestedHierarchy]", showBackground = true, backgroundColor = 0xFFFFFF)
+@Composable
+fun ComplexNestedDashboardScreenPreview() {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(12.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        DashboardHeaderSection()
+        Card(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(4.dp)) {
+            Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text("System Logs & Activity", style = MaterialTheme.typography.titleMedium)
+                HorizontalDivider()
+                repeat(3) { i ->
+                    Text("System event log entry #${i + 1} processed successfully.")
+                }
+            }
+        }
+    }
+}
+
+@Preview(name = "[Screens] [10] [Transactions] [LazyColumn]", showBackground = true, backgroundColor = 0xFFFFFF)
 @Composable
 fun TransactionsLazyList2ScreenPreview() {
     TransactionsLazyListScreenPreview()
 }
 
-@Preview(name = "[Screens] [11] [Settings] [Default]")
+@Preview(name = "[Screens] [11] [Settings] [Default]", showBackground = true, backgroundColor = 0xFFFFFF)
 @Composable
 fun SettingsInternalScroll2ScreenPreview() {
     SettingsInternalScrollScreenPreview()

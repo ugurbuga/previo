@@ -8,13 +8,38 @@ import java.io.File
 data class FunctionInfo(
     val name: String,
     val bodyText: String,
-    val calledFunctionNames: Set<String>
+    val calledFunctionNames: Set<String>,
+    val bodyLines: List<String>
 )
 
 class PrevioSymbolProcessor(
     private val codeGenerator: CodeGenerator,
     private val logger: KSPLogger
 ) : SymbolProcessor {
+
+    private val nativeComposables = setOf(
+        "Text", "Button", "OutlinedButton", "TextButton",
+        "IconButton", "Icon", "Switch", "OutlinedTextField", "TextField",
+        "HorizontalDivider", "VerticalDivider", "Spacer", "Image", "FilterChip", "TopAppBar"
+    )
+
+    private val ignoredIdentifiers = setOf(
+        "Modifier", "Arrangement", "Alignment", "Color", "Dp", "DpSize", "TextStyle",
+        "RoundedCornerShape", "CutCornerShape", "CircleShape", "CornerSize",
+        "BorderStroke", "PaddingValues", "Brush", "FontFamily", "FontWeight", "Font",
+        "MutableState", "State", "Flow", "Job", "Coroutines", "Json", "Intent", "Bundle",
+        "PreviewConfig", "PreviewEntry", "CategoryItem", "CardDefaults", "ButtonDefaults",
+        "OutlinedTextFieldDefaults", "TopAppBarDefaults", "FilterChipDefaults"
+    )
+
+    private fun isComposableName(name: String): Boolean {
+        if (name.firstOrNull()?.isUpperCase() != true) return false
+        if (ignoredIdentifiers.contains(name)) return false
+        if (name.endsWith("Shape") || name.endsWith("Style") || name.endsWith("Brush") ||
+            name.endsWith("Color") || name.endsWith("Values") || name.endsWith("Config") ||
+            name.endsWith("Entry") || name.endsWith("Defaults")) return false
+        return true
+    }
 
     override fun process(resolver: Resolver): List<KSAnnotated> {
         val symbols = resolver.getSymbolsWithAnnotation("androidx.compose.ui.tooling.preview.Preview")
@@ -51,13 +76,19 @@ class PrevioSymbolProcessor(
                 emptyMap()
             }
 
-            // Get 'name' argument from @Preview annotation
+            val funcInfo = funcMap[functionName]
+
+            // Get 'name' and 'backgroundColor' arguments from @Preview annotation
             var previewName = ""
+            var backgroundColorVal: Long? = null
             for (annotation in symbol.annotations) {
                 if (annotation.annotationType.resolve().declaration.qualifiedName?.asString()?.contains("Preview") == true) {
                     for (arg in annotation.arguments) {
                         if (arg.name?.asString() == "name") {
                             previewName = arg.value?.toString() ?: ""
+                        }
+                        if (arg.name?.asString() == "backgroundColor") {
+                            backgroundColorVal = (arg.value as? Number)?.toLong()
                         }
                     }
                 }
@@ -88,7 +119,6 @@ class PrevioSymbolProcessor(
                 customInfo = ""
             }
 
-            // Recursive AST / Call Graph Analysis
             val resolvedBody = resolveRecursiveBody(functionName, funcMap)
 
             val isVerticallyScrollable = resolvedBody.contains("LazyColumn") ||
@@ -99,7 +129,6 @@ class PrevioSymbolProcessor(
                                            resolvedBody.contains("LazyHorizontalGrid") ||
                                            resolvedBody.contains("horizontalScroll")
 
-            // Detect native composables for 4th parameter
             val components = mutableListOf<String>()
             if (resolvedBody.contains("LazyColumn") || resolvedBody.contains("LazyVerticalGrid")) {
                 components.add("LazyColumn")
@@ -146,6 +175,15 @@ class PrevioSymbolProcessor(
                 previewName
             }
 
+            val bgCode = if (backgroundColorVal != null) "${backgroundColorVal}L" else "null"
+            val callTreeText = buildFormattedCallTreeFromFunction(functionName, funcMap)
+                .replace("\\", "\\\\")
+                .replace("\"", "\\\"")
+                .replace("\n", "\\n")
+
+            val rootNode = buildLexicalNodeTreeFromFunction(functionName, funcMap)
+            val composableNodeCode = generateNodeCode(rootNode)
+
             entriesCode.append("""
                 PreviewEntry(
                     id = "$fullName",
@@ -156,6 +194,9 @@ class PrevioSymbolProcessor(
                     customInfo = "$detectedCustomInfo",
                     isVerticallyScrollable = $isVerticallyScrollable,
                     isHorizontallyScrollable = $isHorizontallyScrollable,
+                    backgroundColor = $bgCode,
+                    callTree = "$callTreeText",
+                    composableNode = $composableNodeCode,
                     content = { $fullName() }
                 ),
             """.trimIndent())
@@ -188,7 +229,7 @@ class PrevioSymbolProcessor(
         file.write(fileContent.toByteArray())
         file.close()
 
-        logger.info("Previo generated registry for ${validSymbols.size} previews with recursive call graph scroll detection.")
+        logger.info("Previo generated registry for ${validSymbols.size} previews with recursive delegation scope ComposableNode trees.")
         return unvalidated
     }
 
@@ -201,11 +242,13 @@ class PrevioSymbolProcessor(
             if (nameMatch != null) {
                 val funcName = nameMatch.groupValues[1]
                 val bodySb = StringBuilder()
+                val bodyLines = mutableListOf<String>()
                 var braceCount = 0
                 var started = false
                 var j = i
                 while (j < fileLines.size) {
                     val l = fileLines[j]
+                    bodyLines.add(l)
                     for (char in l) {
                         if (char == '{') {
                             if (!started) started = true
@@ -223,7 +266,7 @@ class PrevioSymbolProcessor(
                     .map { it.groupValues[1] }
                     .toSet()
 
-                result[funcName] = FunctionInfo(funcName, bodyText, calledNames)
+                result[funcName] = FunctionInfo(funcName, bodyText, calledNames, bodyLines)
                 i = j - 1
             }
             i++
@@ -241,6 +284,96 @@ class PrevioSymbolProcessor(
             }
         }
         return sb.toString()
+    }
+
+    private fun buildLexicalNodeTreeFromFunction(funcName: String, funcMap: Map<String, FunctionInfo>, visited: MutableSet<String> = mutableSetOf()): ComposableNode {
+        val info = funcMap[funcName]
+        if (info == null || !visited.add(funcName)) {
+            return ComposableNode(funcName, false, emptyList())
+        }
+
+        val rootNode = ComposableNode(funcName, false, mutableListOf())
+        val stack = mutableListOf<MutableList<ComposableNode>>()
+        stack.add(rootNode.children as MutableList<ComposableNode>)
+
+        var pendingContainerName: String? = null
+        val singleCallRegex = Regex("""\b([A-Z][a-zA-Z0-9_]*)\s*\(""")
+
+        var braceDepth = 0
+
+        for (line in info.bodyLines) {
+            val trimmed = line.trim()
+            if (trimmed.startsWith("//") || trimmed.startsWith("/*")) continue
+
+            if (pendingContainerName != null) {
+                if (trimmed.contains("{")) {
+                    val name = pendingContainerName
+                    pendingContainerName = null
+                    val isNative = nativeComposables.contains(name)
+                    val newNode = ComposableNode(name, isNative, mutableListOf())
+                    stack.last().add(newNode)
+                    stack.add(newNode.children as MutableList<ComposableNode>)
+                } else if (!trimmed.startsWith("modifier") && !trimmed.startsWith(".") &&
+                           !trimmed.startsWith("verticalArrangement") && !trimmed.startsWith("horizontalArrangement") &&
+                           !trimmed.startsWith("contentAlignment") && !trimmed.startsWith("shape") &&
+                           !trimmed.startsWith("colors") && !trimmed.startsWith("label")) {
+                    pendingContainerName = null
+                }
+            }
+
+            val matches = singleCallRegex.findAll(trimmed)
+            for (m in matches) {
+                val name = m.groupValues[1]
+                if (isComposableName(name) && name != funcName) {
+                    if (funcMap.containsKey(name)) {
+                        val delegatedNode = buildLexicalNodeTreeFromFunction(name, funcMap, visited.toMutableSet())
+                        stack.last().add(delegatedNode)
+                    } else {
+                        val isContainer = !nativeComposables.contains(name)
+                        if (isContainer) {
+                            pendingContainerName = name
+                        } else {
+                            stack.last().add(ComposableNode(name, true, emptyList()))
+                        }
+                    }
+                }
+            }
+
+            for (char in trimmed) {
+                if (char == '{') {
+                    braceDepth++
+                } else if (char == '}') {
+                    braceDepth--
+                    if (stack.size > 1) {
+                        stack.removeAt(stack.size - 1)
+                    }
+                }
+            }
+        }
+        return if (rootNode.children.size == 1) rootNode.children.first() else rootNode
+    }
+
+    private fun buildFormattedCallTreeFromFunction(funcName: String, funcMap: Map<String, FunctionInfo>): String {
+        val root = buildLexicalNodeTreeFromFunction(funcName, funcMap)
+        return formatNodeTree(root)
+    }
+
+    private fun formatNodeTree(node: ComposableNode, indent: String = ""): String {
+        val sb = StringBuilder()
+        sb.append("$indent├── ${node.name}\n")
+        for (child in node.children) {
+            sb.append(formatNodeTree(child, "$indent│   "))
+        }
+        return sb.toString()
+    }
+
+    private fun generateNodeCode(node: ComposableNode): String {
+        val childrenCode = if (node.children.isNotEmpty()) {
+            ", listOf(" + node.children.joinToString(", ") { generateNodeCode(it) } + ")"
+        } else {
+            ""
+        }
+        return "ComposableNode(\"${node.name}\", ${node.isNative}$childrenCode)"
     }
 }
 

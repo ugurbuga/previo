@@ -6,7 +6,7 @@ plugins {
 }
 
 group = "io.github.ugurbuga"
-version = "1.0.0-alpha10"
+version = "1.0.0-alpha11"
 
 dependencies {
     implementation(libs.kotlin.test)
@@ -16,8 +16,10 @@ dependencies {
 
 mavenPublishing {
     publishToMavenCentral(com.vanniktech.maven.publish.SonatypeHost.CENTRAL_PORTAL, automaticRelease = true)
-    signAllPublications()
-    coordinates("io.github.ugurbuga", "previo-processor", "1.0.0-alpha10")
+    if (project.hasProperty("signing.keyId") || System.getenv("ORG_GRADLE_PROJECT_signingInMemoryKey") != null) {
+        signAllPublications()
+    }
+    coordinates("io.github.ugurbuga", "previo-processor", "1.0.0-alpha11")
 
     pom {
         name.set("Previo Processor")
