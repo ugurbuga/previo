@@ -18,9 +18,14 @@ class PrevioSymbolProcessor(
 ) : SymbolProcessor {
 
     private val nativeComposables = setOf(
-        "Text", "Button", "OutlinedButton", "TextButton",
-        "IconButton", "Icon", "Switch", "OutlinedTextField", "TextField",
-        "HorizontalDivider", "VerticalDivider", "Spacer", "Image", "FilterChip", "TopAppBar"
+        "Text", "Button", "OutlinedButton", "TextButton", "ElevatedButton", "FilledTonalButton",
+        "IconButton", "Icon", "Switch", "Checkbox", "RadioButton", "Slider",
+        "OutlinedTextField", "TextField",
+        "HorizontalDivider", "VerticalDivider", "Spacer", "Image", "FilterChip", "AssistChip", "SuggestionChip", "InputChip",
+        "TopAppBar", "CenterAlignedTopAppBar", "MediumTopAppBar", "LargeTopAppBar",
+        "BottomAppBar", "NavigationBar", "NavigationRail", "FloatingActionButton", "ExtendedFloatingActionButton",
+        "Badge", "BadgedBox", "CircularProgressIndicator", "LinearProgressIndicator",
+        "Tab", "TabRow", "ScrollableTabRow", "DropdownMenu", "DropdownMenuItem"
     )
 
     private val ignoredIdentifiers = setOf(
@@ -29,7 +34,9 @@ class PrevioSymbolProcessor(
         "BorderStroke", "PaddingValues", "Brush", "FontFamily", "FontWeight", "Font",
         "MutableState", "State", "Flow", "Job", "Coroutines", "Json", "Intent", "Bundle",
         "PreviewConfig", "PreviewEntry", "CategoryItem", "CardDefaults", "ButtonDefaults",
-        "OutlinedTextFieldDefaults", "TopAppBarDefaults", "FilterChipDefaults"
+        "OutlinedTextFieldDefaults", "TopAppBarDefaults", "FilterChipDefaults",
+        "Success", "Error", "Loading", "Failure", "Result", "Response", "Request",
+        "RatingEntry", "NewsItem", "SeriesItem", "DayGroup", "UserSettings", "AppTabId", "ThemeOption"
     )
 
     private fun isComposableName(name: String): Boolean {
@@ -37,8 +44,18 @@ class PrevioSymbolProcessor(
         if (ignoredIdentifiers.contains(name)) return false
         if (name.endsWith("Shape") || name.endsWith("Style") || name.endsWith("Brush") ||
             name.endsWith("Color") || name.endsWith("Values") || name.endsWith("Config") ||
-            name.endsWith("Entry") || name.endsWith("Defaults")) return false
+            name.endsWith("Entry") || name.endsWith("Defaults") || name.endsWith("State") ||
+            name.endsWith("Group") || name.endsWith("Item") || name.endsWith("Option") ||
+            name.endsWith("Result") || name.endsWith("Response") || name.endsWith("Request") ||
+            name.endsWith("Success") || name.endsWith("Error") || name.endsWith("Loading")) return false
         return true
+    }
+
+    private fun isTypeCheckOrCast(text: String, callStart: Int): Boolean {
+        val prefix = text.substring(0, callStart).trimEnd()
+        return prefix.endsWith(".") || prefix.endsWith("is") || prefix.endsWith("as") || prefix.endsWith("class") ||
+               prefix.endsWith("object") || prefix.endsWith("typealias") || prefix.endsWith("import") ||
+               prefix.endsWith("package")
     }
 
     override fun process(resolver: Resolver): List<KSAnnotated> {
@@ -52,29 +69,47 @@ class PrevioSymbolProcessor(
             return unvalidated
         }
 
-        // Cache file function maps for recursive delegation resolution
-        val fileFunctionMaps = mutableMapOf<String, Map<String, FunctionInfo>>()
+        val composableSymbols = resolver.getSymbolsWithAnnotation("androidx.compose.runtime.Composable")
+            .filterIsInstance<KSFunctionDeclaration>()
+        val funcDeclMap = composableSymbols.associateBy { it.simpleName.asString() }
 
-        val entriesCode = StringBuilder()
+        val globalFuncMap = mutableMapOf<String, FunctionInfo>()
+        for (kf in resolver.getAllFiles()) {
+            val path = kf.filePath
+            try {
+                var f = File(path)
+                if (!f.exists()) {
+                    f = File(System.getProperty("user.dir"), path)
+                }
+                if (!f.exists()) {
+                    // Try searching in common module paths
+                    f = File("/Users/ugurbuga/AndroidStudioProjects/TurkishTvTracker", path)
+                }
+                val lines = if (f.exists()) {
+                    logger.warn("Previo: Successfully loaded file from: ${f.absolutePath}")
+                    f.readLines()
+                } else {
+                    logger.warn("Previo: File does not exist at path: $path (absolute: ${f.absolutePath})")
+                    emptyList()
+                }
+                val parsed = parseFileFunctions(lines)
+                globalFuncMap.putAll(parsed)
+            } catch (e: Exception) {
+                logger.warn("Previo: Could not parse file $path: ${e.message}")
+            }
+        }
+        println("=== PREVIO GLOBAL FUNC MAP KEYS ===: " + globalFuncMap.keys.filter { it.contains("News") || it.contains("Screen") || it.contains("Preview") })
+
+        val touchInits = StringBuilder()
 
         for (symbol in validSymbols) {
-            val file = symbol.containingFile
-            val packageName = file?.packageName?.asString() ?: continue
+            val file = symbol.containingFile ?: continue
+            val packageName = file.packageName.asString()
             val functionName = symbol.simpleName.asString()
             val fullName = "$packageName.$functionName"
+            val safeName = functionName + "_" + packageName.replace(".", "_")
 
-            val filePath = (symbol.location as? FileLocation)?.filePath
-            val funcMap = if (filePath != null) {
-                fileFunctionMaps.getOrPut(filePath) {
-                    try {
-                        parseFileFunctions(File(filePath).readLines())
-                    } catch (_: Exception) {
-                        emptyMap()
-                    }
-                }
-            } else {
-                emptyMap()
-            }
+            val funcMap = globalFuncMap
 
             val funcInfo = funcMap[functionName]
 
@@ -176,45 +211,57 @@ class PrevioSymbolProcessor(
             }
 
             val bgCode = if (backgroundColorVal != null) "${backgroundColorVal}L" else "null"
-            val callTreeText = buildFormattedCallTreeFromFunction(functionName, funcMap)
-                .replace("\\", "\\\\")
-                .replace("\"", "\\\"")
-                .replace("\n", "\\n")
 
-            val rootNode = buildLexicalNodeTreeFromFunction(functionName, funcMap)
+            val rootNode = buildAstNodeTreeFromFunctionText(functionName, funcMap)
             val composableNodeCode = generateNodeCode(rootNode)
 
-            entriesCode.append("""
-                PreviewEntry(
-                    id = "$fullName",
-                    name = "$finalPreviewName",
-                    group = "$group",
-                    order = $order,
-                    alphabeticalOrder = "$alphabeticalOrder",
-                    customInfo = "$detectedCustomInfo",
-                    isVerticallyScrollable = $isVerticallyScrollable,
-                    isHorizontallyScrollable = $isHorizontallyScrollable,
-                    backgroundColor = $bgCode,
-                    callTree = "$callTreeText",
-                    composableNode = $composableNodeCode,
-                    content = { $fullName() }
-                ),
-            """.trimIndent())
+            val entryFileContent = """
+                package com.ugurbuga.previo.runtime
+
+                import androidx.compose.runtime.Composable
+                import com.ugurbuga.previo.*
+
+                internal object PrevioRegistry_$safeName {
+                    init {
+                        PrevioRegistry.register(
+                            listOf(
+                                PreviewEntry(
+                                    id = "$fullName",
+                                    name = "$finalPreviewName",
+                                    group = "$group",
+                                    order = $order,
+                                    alphabeticalOrder = "$alphabeticalOrder",
+                                    customInfo = "$detectedCustomInfo",
+                                    isVerticallyScrollable = $isVerticallyScrollable,
+                                    isHorizontallyScrollable = $isHorizontallyScrollable,
+                                    backgroundColor = $bgCode,
+                                    composableNode = $composableNodeCode,
+                                    content = { $fullName() }
+                                )
+                            )
+                        )
+                    }
+                    fun touch() {}
+                }
+            """.trimIndent()
+
+            val entryFile = codeGenerator.createNewFile(
+                Dependencies(true, file),
+                "com.ugurbuga.previo.runtime",
+                "PrevioRegistry_$safeName"
+            )
+            entryFile.write(entryFileContent.toByteArray())
+            entryFile.close()
+
+            touchInits.append("PrevioRegistry_$safeName.touch()\n")
         }
 
         val fileContent = """
             package com.ugurbuga.previo.runtime
 
-            import androidx.compose.runtime.Composable
-            import com.ugurbuga.previo.*
-
             object GeneratedPreviewRegistry {
                 init {
-                    PrevioRegistry.register(
-                        listOf(
-                            $entriesCode
-                        )
-                    )
+                    $touchInits
                 }
 
                 fun touch() {}
@@ -229,7 +276,7 @@ class PrevioSymbolProcessor(
         file.write(fileContent.toByteArray())
         file.close()
 
-        logger.info("Previo generated registry for ${validSymbols.size} previews with recursive delegation scope ComposableNode trees.")
+        logger.info("Previo generated registry for ${validSymbols.size} previews across separate registry files.")
         return unvalidated
     }
 
@@ -241,29 +288,35 @@ class PrevioSymbolProcessor(
             val nameMatch = Regex("""\bfun\s+([a-zA-Z0-9_]+)\s*\(""").find(line)
             if (nameMatch != null) {
                 val funcName = nameMatch.groupValues[1]
-                val bodySb = StringBuilder()
                 val bodyLines = mutableListOf<String>()
                 var braceCount = 0
-                var started = false
+                var foundOpenBrace = false
+                var isExpressionBody = false
                 var j = i
                 while (j < fileLines.size) {
                     val l = fileLines[j]
                     bodyLines.add(l)
-                    for (char in l) {
-                        if (char == '{') {
-                            if (!started) started = true
+                    for (ch in l) {
+                        if (ch == '{' && !isExpressionBody) {
+                            if (!foundOpenBrace) foundOpenBrace = true
                             braceCount++
-                        } else if (char == '}') {
+                        } else if (ch == '}' && !isExpressionBody) {
                             braceCount--
+                        } else if (ch == '=' && !foundOpenBrace && braceCount == 0) {
+                            isExpressionBody = true
                         }
                     }
-                    bodySb.append(l).append("\n")
                     j++
-                    if (started && braceCount == 0) break
+                    if (foundOpenBrace && braceCount == 0) break
+                    if (isExpressionBody && (j < fileLines.size && (fileLines[j].trimStart().startsWith("fun ") || fileLines[j].trimStart().startsWith("@")))) {
+                        break
+                    }
                 }
-                val bodyText = bodySb.toString()
-                val calledNames = Regex("""\b([a-zA-Z0-9_]+)\s*\(""").findAll(bodyText)
+                val bodyText = bodyLines.joinToString("\n")
+                val bodyCode = bodyText.substringAfter('{', bodyText)
+                val calledNames = Regex("""\b([a-zA-Z0-9_]+)\s*\(""").findAll(bodyCode)
                     .map { it.groupValues[1] }
+                    .filter { it != funcName }
                     .toSet()
 
                 result[funcName] = FunctionInfo(funcName, bodyText, calledNames, bodyLines)
@@ -286,85 +339,284 @@ class PrevioSymbolProcessor(
         return sb.toString()
     }
 
-    private fun buildLexicalNodeTreeFromFunction(funcName: String, funcMap: Map<String, FunctionInfo>, visited: MutableSet<String> = mutableSetOf()): ComposableNode {
+    // ============================================================
+    // Known slot parameter names for common Compose composables.
+    // These are the lambda params that act as "content slots".
+    // ============================================================
+    private val knownSlotParams = setOf(
+        "topBar", "bottomBar", "floatingActionButton", "snackbarHost",
+        "navigationIcon", "title", "actions", "content",
+        "label", "leadingIcon", "trailingIcon", "supportingText",
+        "indicator", "thumb", "track", "checked", "unchecked",
+        "header", "footer", "placeholder", "prefix", "suffix",
+        "icon", "headlineContent", "overliningContent", "leadingContent", "trailingContent",
+        "item", "items"
+    )
+
+    private fun findMatchingCloseBrace(text: String, openBraceIndex: Int): Int {
+        var depth = 1
+        var idx = openBraceIndex + 1
+        var inString = false
+        var isEscaped = false
+        while (idx < text.length && depth > 0) {
+            val ch = text[idx]
+            if (inString) {
+                if (isEscaped) {
+                    isEscaped = false
+                } else if (ch == '\\') {
+                    isEscaped = true
+                } else if (ch == '"') {
+                    inString = false
+                }
+            } else {
+                if (ch == '"') {
+                    inString = true
+                } else if (ch == '{') {
+                    depth++
+                } else if (ch == '}') {
+                    depth--
+                }
+            }
+            if (depth == 0) return idx
+            idx++
+        }
+        return idx - 1
+    }
+
+    /**
+     * Extracts the first quoted string literal from a call like Text("Hello") or Text(text = "Hello")
+     */
+    private fun extractFirstStringLiteral(callText: String): String? {
+        val parenOpen = callText.indexOf('(')
+        if (parenOpen < 0) return null
+        var idx = parenOpen + 1
+        while (idx < callText.length && callText[idx] != '"') idx++
+        if (idx >= callText.length) return null
+        idx++ // skip opening quote
+        val sb = StringBuilder()
+        while (idx < callText.length && callText[idx] != '"') {
+            if (callText[idx] == '\\' && idx + 1 < callText.length) {
+                when (callText[idx + 1]) {
+                    'n' -> sb.append("\n")
+                    't' -> sb.append("\t")
+                    '"' -> sb.append('"')
+                    '\\' -> sb.append('\\')
+                    else -> sb.append(callText[idx + 1])
+                }
+                idx += 2
+            } else {
+                sb.append(callText[idx])
+                idx++
+            }
+        }
+        val result = sb.toString().trim()
+        return if (result.length in 1..80) result else null
+    }
+
+    /**
+     * Given the full argument text of a composable call (between outer parens),
+     * extracts named slot params that have lambda values: e.g. "topBar = { ... }"
+     * Returns a map of slotName -> lambdaBodyText
+     */
+    private fun extractNamedSlotLambdas(argsText: String): Map<String, String> {
+        val result = mutableMapOf<String, String>()
+        val slotRegex = Regex("""\b(${knownSlotParams.joinToString("|")})\s*=\s*(?:\w+@)?\{""")
+        var searchStart = 0
+        while (searchStart < argsText.length) {
+            val m = slotRegex.find(argsText, searchStart) ?: break
+            val slotName = m.groupValues[1]
+            val braceStart = m.range.last // points to '{'
+            val closeIndex = findMatchingCloseBrace(argsText, braceStart)
+            if (closeIndex > braceStart) {
+                val lambdaBody = argsText.substring(braceStart + 1, closeIndex)
+                result[slotName] = lambdaBody
+                searchStart = closeIndex + 1
+            } else {
+                searchStart = m.range.last + 1
+            }
+        }
+        return result
+    }
+
+    private fun findMatchingCloseParen(text: String, openParenIndex: Int): Int {
+        var depth = 1
+        var idx = openParenIndex + 1
+        var inString = false
+        var isEscaped = false
+        while (idx < text.length && depth > 0) {
+            val ch = text[idx]
+            if (inString) {
+                if (isEscaped) isEscaped = false
+                else if (ch == '\\') isEscaped = true
+                else if (ch == '"') inString = false
+            } else {
+                if (ch == '"') inString = true
+                else if (ch == '(') depth++
+                else if (ch == ')') depth--
+            }
+            if (depth == 0) return idx
+            idx++
+        }
+        return -1
+    }
+
+    private fun buildAstNodeTreeFromFunctionText(funcName: String, funcMap: Map<String, FunctionInfo>, visited: Set<String> = emptySet()): ComposableNode {
         val info = funcMap[funcName]
-        if (info == null || !visited.add(funcName)) {
+        if (info == null) {
+            logger.warn("Previo: buildAstNodeTreeFromFunctionText info null for $funcName")
             return ComposableNode(funcName, false, emptyList())
         }
+        val nextVisited = visited + funcName
 
-        val rootNode = ComposableNode(funcName, false, mutableListOf())
-        val stack = mutableListOf<MutableList<ComposableNode>>()
-        stack.add(rootNode.children as MutableList<ComposableNode>)
-
-        var pendingContainerName: String? = null
-        val singleCallRegex = Regex("""\b([A-Z][a-zA-Z0-9_]*)\s*\(""")
-
-        var braceDepth = 0
-
-        for (line in info.bodyLines) {
-            val trimmed = line.trim()
-            if (trimmed.startsWith("//") || trimmed.startsWith("/*")) continue
-
-            if (pendingContainerName != null) {
-                if (trimmed.contains("{")) {
-                    val name = pendingContainerName
-                    pendingContainerName = null
-                    val isNative = nativeComposables.contains(name)
-                    val newNode = ComposableNode(name, isNative, mutableListOf())
-                    stack.last().add(newNode)
-                    stack.add(newNode.children as MutableList<ComposableNode>)
-                } else if (!trimmed.startsWith("modifier") && !trimmed.startsWith(".") &&
-                           !trimmed.startsWith("verticalArrangement") && !trimmed.startsWith("horizontalArrangement") &&
-                           !trimmed.startsWith("contentAlignment") && !trimmed.startsWith("shape") &&
-                           !trimmed.startsWith("colors") && !trimmed.startsWith("label")) {
-                    pendingContainerName = null
-                }
-            }
-
-            val matches = singleCallRegex.findAll(trimmed)
-            for (m in matches) {
-                val name = m.groupValues[1]
-                if (isComposableName(name) && name != funcName) {
-                    if (funcMap.containsKey(name)) {
-                        val delegatedNode = buildLexicalNodeTreeFromFunction(name, funcMap, visited.toMutableSet())
-                        stack.last().add(delegatedNode)
+        val fullText = info.bodyText
+        val funIdx = fullText.indexOf("fun $funcName")
+        val bodyText = if (funIdx >= 0) {
+            val parenOpen = fullText.indexOf('(', funIdx)
+            if (parenOpen >= 0) {
+                val parenClose = findMatchingCloseParen(fullText, parenOpen)
+                if (parenClose >= 0) {
+                    val openBraceIdx = fullText.indexOf('{', parenClose)
+                    val closeBraceIdx = if (openBraceIdx >= 0) findMatchingCloseBrace(fullText, openBraceIdx) else -1
+                    if (openBraceIdx >= 0 && closeBraceIdx > openBraceIdx) {
+                        fullText.substring(openBraceIdx + 1, closeBraceIdx)
                     } else {
-                        val isContainer = !nativeComposables.contains(name)
-                        if (isContainer) {
-                            pendingContainerName = name
-                        } else {
-                            stack.last().add(ComposableNode(name, true, emptyList()))
-                        }
+                        val eqIdx = fullText.indexOf('=', parenClose)
+                        if (eqIdx >= 0) fullText.substring(eqIdx + 1) else fullText
                     }
+                } else fullText
+            } else fullText
+        } else fullText
+
+        val children = parseBlockCalls(bodyText, funcMap, nextVisited, funcName)
+        logger.warn("Previo AST for $funcName: bodyText length=${bodyText.length}, children count=${children.size}, children names=${children.map { it.name }}")
+
+        return ComposableNode(funcName, false, children)
+    }
+
+    /**
+     * Shared core logic to scan [text] for composable calls, extract scope, and build ComposableNode tree.
+     * [slotContext] is the slot name from the parent's perspective (may be null for top-level calls).
+     */
+    private fun parseCallsInText(
+        text: String,
+        funcMap: Map<String, FunctionInfo>,
+        visited: Set<String>,
+        currentFuncName: String,
+        slotContext: String? = null
+    ): List<ComposableNode> {
+        val nodes = mutableListOf<ComposableNode>()
+        val callRegex = Regex("""\b([A-Z][a-zA-Z0-9_]*|item|items|itemsIndexed)\s*([({])""")
+
+        var i = 0
+        while (i < text.length) {
+            val match = callRegex.find(text, i) ?: break
+            val name = match.groupValues[1]
+            val delimiter = match.groupValues[2]
+            val callStart = match.range.first
+            val delimIndex = match.range.last
+
+            val isListItemDsl = name == "item" || name == "items" || name == "itemsIndexed"
+
+            if (!isListItemDsl && (!isComposableName(name) || name == currentFuncName || isTypeCheckOrCast(text, callStart))) {
+                i = delimIndex + 1
+                continue
+            }
+
+            var argsText = ""
+            var trailingLambdaBody = ""
+            var scopeEnd = delimIndex + 1
+
+            if (delimiter == "(") {
+                var parenDepth = 1
+                var pIndex = delimIndex + 1
+                var inStr = false
+                var esc = false
+                while (pIndex < text.length && parenDepth > 0) {
+                    val ch = text[pIndex]
+                    if (inStr) {
+                        if (esc) esc = false
+                        else if (ch == '\\') esc = true
+                        else if (ch == '"') inStr = false
+                    } else {
+                        if (ch == '"') inStr = true
+                        else if (ch == '(') parenDepth++
+                        else if (ch == ')') parenDepth--
+                    }
+                    pIndex++
+                }
+                val parenEnd = pIndex
+                argsText = if (parenEnd - 1 > delimIndex + 1) text.substring(delimIndex + 1, parenEnd - 1) else ""
+                scopeEnd = parenEnd
+
+                var bIndex = parenEnd
+                while (bIndex < text.length && (text[bIndex].isWhitespace() || text[bIndex] == '=' || text[bIndex] == ',')) {
+                    bIndex++
+                }
+                if (bIndex < text.length && text[bIndex] == '{') {
+                    val closeBraceIndex = findMatchingCloseBrace(text, bIndex)
+                    trailingLambdaBody = text.substring(bIndex + 1, closeBraceIndex)
+                    scopeEnd = closeBraceIndex + 1
+                }
+                i = scopeEnd
+            } else {
+                // delimiter == '{'
+                val closeBraceIndex = findMatchingCloseBrace(text, delimIndex)
+                trailingLambdaBody = text.substring(delimIndex + 1, closeBraceIndex)
+                scopeEnd = closeBraceIndex + 1
+                i = scopeEnd
+            }
+
+            if (isListItemDsl) {
+                if (trailingLambdaBody.isNotBlank()) {
+                    val itemChildren = parseCallsInText(trailingLambdaBody, funcMap, visited, currentFuncName, name)
+                    nodes.addAll(itemChildren)
+                }
+                continue
+            }
+
+            val isNative = nativeComposables.contains(name)
+
+            // Extract infoOrText for native leaf composables (e.g. Text("Hello"))
+            val infoOrText: String? = if (isNative && argsText.isNotBlank()) {
+                extractFirstStringLiteral("$name($argsText)")
+            } else null
+
+            // Extract slot children from named lambda params e.g. topBar = { ... }
+            val slotChildren = mutableListOf<ComposableNode>()
+            if (argsText.isNotBlank() && !isNative) {
+                val slots = extractNamedSlotLambdas(argsText)
+                for ((slotName, lambdaContent) in slots) {
+                    val slotNodes = parseCallsInText(lambdaContent, funcMap, visited, currentFuncName, slotName)
+                    slotChildren.addAll(slotNodes)
                 }
             }
 
-            for (char in trimmed) {
-                if (char == '{') {
-                    braceDepth++
-                } else if (char == '}') {
-                    braceDepth--
-                    if (stack.size > 1) {
-                        stack.removeAt(stack.size - 1)
-                    }
+            // Extract children inside trailing lambda body
+            val trailingChildren = if (trailingLambdaBody.isNotBlank()) {
+                parseCallsInText(trailingLambdaBody, funcMap, visited, currentFuncName)
+            } else emptyList()
+
+            val targetInfo = funcMap[name]
+            val finalNode = if (targetInfo != null && !visited.contains(name)) {
+                val bodyNode = buildAstNodeTreeFromFunctionText(name, funcMap, visited + name)
+                val mergedChildren = if (trailingChildren.isNotEmpty()) {
+                    slotChildren + trailingChildren
+                } else {
+                    slotChildren + bodyNode.children
                 }
+                ComposableNode(name, isNative, mergedChildren, slotContext, infoOrText)
+            } else {
+                val allDirectChildren = slotChildren + trailingChildren
+                ComposableNode(name, isNative, allDirectChildren, slotContext, infoOrText)
             }
+
+            nodes.add(finalNode)
         }
-        return if (rootNode.children.size == 1) rootNode.children.first() else rootNode
+        return nodes
     }
 
-    private fun buildFormattedCallTreeFromFunction(funcName: String, funcMap: Map<String, FunctionInfo>): String {
-        val root = buildLexicalNodeTreeFromFunction(funcName, funcMap)
-        return formatNodeTree(root)
-    }
-
-    private fun formatNodeTree(node: ComposableNode, indent: String = ""): String {
-        val sb = StringBuilder()
-        sb.append("$indent├── ${node.name}\n")
-        for (child in node.children) {
-            sb.append(formatNodeTree(child, "$indent│   "))
-        }
-        return sb.toString()
+    private fun parseBlockCalls(text: String, funcMap: Map<String, FunctionInfo>, visited: Set<String>, currentFuncName: String): List<ComposableNode> {
+        return parseCallsInText(text, funcMap, visited, currentFuncName)
     }
 
     private fun generateNodeCode(node: ComposableNode): String {
@@ -373,7 +625,16 @@ class PrevioSymbolProcessor(
         } else {
             ""
         }
-        return "ComposableNode(\"${node.name}\", ${node.isNative}$childrenCode)"
+        val slotCode = if (node.slotOrRole != null) ", slotOrRole = \"${node.slotOrRole}\"" else ""
+        val infoCode = if (node.infoOrText != null) {
+            val safeInfo = node.infoOrText
+                .replace("\\", "\\\\")
+                .replace("\"", "'")
+                .replace("$", "\\$")
+                .replace("\n", "\\n")
+            ", infoOrText = \"$safeInfo\""
+        } else ""
+        return "ComposableNode(\"${node.name}\", ${node.isNative}$childrenCode$slotCode$infoCode)"
     }
 }
 

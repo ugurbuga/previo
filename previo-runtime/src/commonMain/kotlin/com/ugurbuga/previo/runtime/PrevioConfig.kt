@@ -13,7 +13,8 @@ data class PrevioConfig(
     val colors: PrevioColors? = null,
     val colorScheme: ColorScheme? = null,
     val typography: Typography? = null,
-    val isDarkTheme: Boolean = false
+    val isDarkTheme: Boolean = false,
+    val showExtraTreeInfo: Boolean = false
 ) {
     @Composable
     fun getColors(): PrevioColors {

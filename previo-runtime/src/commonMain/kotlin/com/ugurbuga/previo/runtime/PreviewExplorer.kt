@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -16,6 +17,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ButtonDefaults
@@ -676,7 +678,7 @@ internal fun PreviewDetailPagerScreen(
                                     .fillMaxSize()
                                     .zIndex(5f),
                                 shape = RoundedCornerShape(4.dp),
-                                color = colors.cardBackground,
+                                color = colors.cardBackground.copy(alpha = 0.95f),
                                 border = null,
                                 tonalElevation = 4.dp
                             ) {
@@ -685,7 +687,7 @@ internal fun PreviewDetailPagerScreen(
                                         .fillMaxSize()
                                         .verticalScroll(rememberScrollState())
                                         .padding(16.dp),
-                                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                                    verticalArrangement = Arrangement.spacedBy(6.dp)
                                 ) {
                                     Row(
                                         modifier = Modifier.fillMaxWidth(),
@@ -698,24 +700,32 @@ internal fun PreviewDetailPagerScreen(
                                                 ?: MaterialTheme.typography.titleSmall,
                                             color = colors.primaryText
                                         )
-                                        IconButton(
-                                            onClick = { showTreeView = false },
-                                            modifier = Modifier.noRippleClickable {
-                                                showTreeView = false
+                                        Row(verticalAlignment = Alignment.CenterVertically) {
+                                            IconButton(
+                                                onClick = { showTreeView = false },
+                                                modifier = Modifier.noRippleClickable {
+                                                    showTreeView = false
+                                                }
+                                            ) {
+                                                Icon(
+                                                    painter = painterResource(Res.drawable.ic_close),
+                                                    contentDescription = stringResource(Res.string.previo_close),
+                                                    tint = colors.iconTint
+                                                )
                                             }
-                                        ) {
-                                            Icon(
-                                                painter = painterResource(Res.drawable.ic_close),
-                                                contentDescription = stringResource(Res.string.previo_close),
-                                                tint = colors.iconTint
-                                            )
                                         }
                                     }
-                                    ComposableTreeView(
-                                        node = currentPreview.composableNode,
-                                        colors = colors,
-                                        config = config
-                                    )
+                                    Box(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .horizontalScroll(rememberScrollState())
+                                    ) {
+                                        ComposableTreeView(
+                                            node = currentPreview.composableNode,
+                                            colors = colors,
+                                            config = config
+                                        )
+                                    }
                                 }
                             }
                         }
@@ -867,21 +877,39 @@ fun ComposableTreeView(
     config: PrevioConfig,
     depth: Int = 0
 ) {
+    val previoNode = remember(node) { node.toPrevioNode() }
+    PrevioNodeTreeView(
+        node = previoNode,
+        colors = colors,
+        config = config,
+        depth = depth
+    )
+}
+
+@Composable
+fun PrevioNodeTreeView(
+    node: PrevioNode,
+    colors: PrevioColors,
+    config: PrevioConfig,
+    depth: Int = 0
+) {
     var isExpanded by remember { mutableStateOf(true) }
+    val isLeaf = node.kind == NodeKind.Leaf
 
     Column(modifier = Modifier.fillMaxWidth().padding(start = 2.dp)) {
         Row(
-            modifier = Modifier
-                .fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(4.dp)
         ) {
+            // Main node chip
             Surface(
                 modifier = Modifier
                     .noRippleClickable {
-                        if (!node.isNative && node.children.isNotEmpty()) isExpanded = !isExpanded
+                        if (!isLeaf && node.children.isNotEmpty()) isExpanded = !isExpanded
                     }.padding(bottom = 2.dp),
                 shape = RoundedCornerShape(4.dp),
-                color = if (node.isNative) colors.chipSelectedBackground.copy(alpha = 0.5f) else colors.chipSelectedBackground,
+                color = if (isLeaf) colors.chipSelectedBackground.copy(alpha = 0.5f) else colors.chipSelectedBackground,
                 border = null
             ) {
                 Row(
@@ -895,7 +923,7 @@ fun ComposableTreeView(
                             ?: MaterialTheme.typography.labelMedium,
                         color = colors.primaryText
                     )
-                    if (!node.isNative && node.children.isNotEmpty()) {
+                    if (!isLeaf && node.children.isNotEmpty()) {
                         Icon(
                             painter = painterResource(if (isExpanded) Res.drawable.ic_chevron_down else Res.drawable.ic_chevron_right),
                             contentDescription = if (isExpanded) "Collapse" else "Expand",
@@ -905,21 +933,66 @@ fun ComposableTreeView(
                     }
                 }
             }
+
+            if (config.showExtraTreeInfo) {
+                // Slot/Role badge: e.g. "topBar", "navigationIcon"
+                if (!node.slotOrRole.isNullOrBlank()) {
+                    Surface(
+                        shape = RoundedCornerShape(4.dp),
+                        color = colors.secondaryText.copy(alpha = 0.12f),
+                        modifier = Modifier.padding(bottom = 2.dp)
+                    ) {
+                        Text(
+                            text = node.slotOrRole,
+                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                            style = config.typography?.labelSmall
+                                ?: MaterialTheme.typography.labelSmall,
+                            color = colors.secondaryText
+                        )
+                    }
+                }
+
+                // InfoOrText badge: e.g. "Reytingler" from Text("Reytingler")
+                if (!node.infoOrText.isNullOrBlank()) {
+                    Surface(
+                        shape = RoundedCornerShape(4.dp),
+                        color = colors.badgeBackground.copy(alpha = 0.6f),
+                        modifier = Modifier.padding(bottom = 2.dp)
+                    ) {
+                        Text(
+                            text = "\"${node.infoOrText}\"",
+                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                            style = config.typography?.labelSmall
+                                ?: MaterialTheme.typography.labelSmall,
+                            color = colors.badgeText
+                        )
+                    }
+                }
+            }
         }
 
-        if (!node.isNative && isExpanded && node.children.isNotEmpty()) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(start = 8.dp),
-            ) {
-                node.children.forEach { child ->
-                    ComposableTreeView(
-                        node = child,
-                        colors = colors,
-                        config = config,
-                        depth = depth + 1
-                    )
+        if (!isLeaf && isExpanded && node.children.isNotEmpty()) {
+            Row(modifier = Modifier.fillMaxWidth()) {
+                Box(
+                    modifier = Modifier
+                        .padding(start = 12.dp, top = 2.dp, bottom = 2.dp)
+                        .width(1.dp)
+                        .fillMaxHeight()
+                        .background(colors.dividerOrBorder.copy(alpha = 0.4f))
+                )
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(start = 8.dp)
+                ) {
+                    node.children.forEach { child ->
+                        PrevioNodeTreeView(
+                            node = child,
+                            colors = colors,
+                            config = config,
+                            depth = depth + 1
+                        )
+                    }
                 }
             }
         }
