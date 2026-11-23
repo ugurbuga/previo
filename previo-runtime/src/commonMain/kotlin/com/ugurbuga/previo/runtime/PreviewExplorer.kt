@@ -2,13 +2,13 @@ package com.ugurbuga.previo.runtime
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -17,7 +17,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ButtonDefaults
@@ -26,6 +25,7 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LocalContentColor
@@ -896,7 +896,7 @@ fun PrevioNodeTreeView(
     var isExpanded by remember { mutableStateOf(true) }
     val isLeaf = node.kind == NodeKind.Leaf
 
-    Column(modifier = Modifier.fillMaxWidth().padding(start = 2.dp)) {
+    Column(modifier = Modifier.fillMaxWidth().padding(start = 8.dp)) {
         Row(
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,
@@ -907,9 +907,9 @@ fun PrevioNodeTreeView(
                 modifier = Modifier
                     .noRippleClickable {
                         if (!isLeaf && node.children.isNotEmpty()) isExpanded = !isExpanded
-                    }.padding(bottom = 2.dp),
+                    }.padding(top = 2.dp),
                 shape = RoundedCornerShape(4.dp),
-                color = if (isLeaf) colors.chipSelectedBackground.copy(alpha = 0.5f) else colors.chipSelectedBackground,
+                color = if (isLeaf) colors.primaryText.copy(alpha = 0.65f) else colors.primaryText,
                 border = null
             ) {
                 Row(
@@ -921,14 +921,14 @@ fun PrevioNodeTreeView(
                         text = node.name,
                         style = config.typography?.labelMedium?.copy(fontWeight = androidx.compose.ui.text.font.FontWeight.Medium)
                             ?: MaterialTheme.typography.labelMedium,
-                        color = colors.primaryText
+                        color = colors.chipSelectedBackground,
                     )
                     if (!isLeaf && node.children.isNotEmpty()) {
                         Icon(
                             painter = painterResource(if (isExpanded) Res.drawable.ic_chevron_down else Res.drawable.ic_chevron_right),
                             contentDescription = if (isExpanded) "Collapse" else "Expand",
                             modifier = Modifier.size(14.dp),
-                            tint = colors.iconTint
+                            tint = colors.chipSelectedBackground
                         )
                     }
                 }
@@ -973,17 +973,9 @@ fun PrevioNodeTreeView(
 
         if (!isLeaf && isExpanded && node.children.isNotEmpty()) {
             Row(modifier = Modifier.fillMaxWidth()) {
-                Box(
-                    modifier = Modifier
-                        .padding(start = 12.dp, top = 2.dp, bottom = 2.dp)
-                        .width(1.dp)
-                        .fillMaxHeight()
-                        .background(colors.dividerOrBorder.copy(alpha = 0.4f))
-                )
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(start = 8.dp)
                 ) {
                     node.children.forEach { child ->
                         PrevioNodeTreeView(

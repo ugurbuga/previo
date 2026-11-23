@@ -1,7 +1,14 @@
 package com.ugurbuga.previo.processor
 
-import com.google.devtools.ksp.processing.*
-import com.google.devtools.ksp.symbol.*
+import com.google.devtools.ksp.processing.CodeGenerator
+import com.google.devtools.ksp.processing.Dependencies
+import com.google.devtools.ksp.processing.KSPLogger
+import com.google.devtools.ksp.processing.Resolver
+import com.google.devtools.ksp.processing.SymbolProcessor
+import com.google.devtools.ksp.processing.SymbolProcessorEnvironment
+import com.google.devtools.ksp.processing.SymbolProcessorProvider
+import com.google.devtools.ksp.symbol.KSAnnotated
+import com.google.devtools.ksp.symbol.KSFunctionDeclaration
 import com.google.devtools.ksp.validate
 import java.io.File
 
@@ -33,21 +40,13 @@ class PrevioSymbolProcessor(
         "RoundedCornerShape", "CutCornerShape", "CircleShape", "CornerSize",
         "BorderStroke", "PaddingValues", "Brush", "FontFamily", "FontWeight", "Font",
         "MutableState", "State", "Flow", "Job", "Coroutines", "Json", "Intent", "Bundle",
-        "PreviewConfig", "PreviewEntry", "CategoryItem", "CardDefaults", "ButtonDefaults",
+        "LazyListState", "BackHandler", "LaunchedEffect", "CardDefaults", "ButtonDefaults",
         "OutlinedTextFieldDefaults", "TopAppBarDefaults", "FilterChipDefaults",
-        "Success", "Error", "Loading", "Failure", "Result", "Response", "Request",
-        "RatingEntry", "NewsItem", "SeriesItem", "DayGroup", "UserSettings", "AppTabId", "ThemeOption"
     )
 
     private fun isComposableName(name: String): Boolean {
         if (name.firstOrNull()?.isUpperCase() != true) return false
         if (ignoredIdentifiers.contains(name)) return false
-        if (name.endsWith("Shape") || name.endsWith("Style") || name.endsWith("Brush") ||
-            name.endsWith("Color") || name.endsWith("Values") || name.endsWith("Config") ||
-            name.endsWith("Entry") || name.endsWith("Defaults") || name.endsWith("State") ||
-            name.endsWith("Group") || name.endsWith("Item") || name.endsWith("Option") ||
-            name.endsWith("Result") || name.endsWith("Response") || name.endsWith("Request") ||
-            name.endsWith("Success") || name.endsWith("Error") || name.endsWith("Loading")) return false
         return true
     }
 
