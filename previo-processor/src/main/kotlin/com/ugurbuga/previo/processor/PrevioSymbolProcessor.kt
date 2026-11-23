@@ -81,14 +81,19 @@ class PrevioSymbolProcessor(
                     f = File(System.getProperty("user.dir"), path)
                 }
                 if (!f.exists()) {
-                    // Try searching in common module paths
-                    f = File("/Users/ugurbuga/AndroidStudioProjects/TurkishTvTracker", path)
+                    var current: File? = File(System.getProperty("user.dir"))
+                    while (current != null && !f.exists()) {
+                        val candidate = File(current, path)
+                        if (candidate.exists()) {
+                            f = candidate
+                            break
+                        }
+                        current = current.parentFile
+                    }
                 }
                 val lines = if (f.exists()) {
-                    logger.warn("Previo: Successfully loaded file from: ${f.absolutePath}")
                     f.readLines()
                 } else {
-                    logger.warn("Previo: File does not exist at path: $path (absolute: ${f.absolutePath})")
                     emptyList()
                 }
                 val parsed = parseFileFunctions(lines)
@@ -97,7 +102,6 @@ class PrevioSymbolProcessor(
                 logger.warn("Previo: Could not parse file $path: ${e.message}")
             }
         }
-        println("=== PREVIO GLOBAL FUNC MAP KEYS ===: " + globalFuncMap.keys.filter { it.contains("News") || it.contains("Screen") || it.contains("Preview") })
 
         val touchInits = StringBuilder()
 
