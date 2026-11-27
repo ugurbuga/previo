@@ -1,4 +1,4 @@
-name: Publish Previo CMP Library to Maven Central & GitHub Packages
+name: Publish Previo CMP Library to GitHub Packages
 
 on:
   release:
@@ -25,14 +25,9 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
-      - name: Publish to Maven Central and GitHub Packages
+      - name: Publish to GitHub Packages
         env:
-          ORG_GRADLE_PROJECT_mavenCentralUsername: ${{ secrets.MAVEN_CENTRAL_USERNAME }}
-          ORG_GRADLE_PROJECT_mavenCentralPassword: ${{ secrets.MAVEN_CENTRAL_PASSWORD }}
-          ORG_GRADLE_PROJECT_signingInMemoryKey: ${{ secrets.SIGNING_IN_MEMORY_KEY }}
-          ORG_GRADLE_PROJECT_signingInMemoryKeyPassword: ${{ secrets.SIGNING_IN_MEMORY_KEY_PASSWORD }}
           ORG_GRADLE_PROJECT_gpr_user: ${{ github.actor }}
           ORG_GRADLE_PROJECT_gpr_key: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          ./gradlew publishAndReleaseToMavenCentral --no-configuration-cache -x test -x lint
-          ./gradlew :previo-runtime:publishAllPublicationsToGitHubPackagesRepository :previo-processor:publishAllPublicationsToGitHubPackagesRepository -Pgpr.user=${{ github.actor }} -Pgpr.key=${{ secrets.GITHUB_TOKEN }} --no-configuration-cache -x test -x lint
+          ./gradlew publishAllPublicationsToGitHubPackagesRepository -Pgpr.user=${{ github.actor }} -Pgpr.key=${{ secrets.GITHUB_TOKEN }} --no-configuration-cache -x test -x lint
