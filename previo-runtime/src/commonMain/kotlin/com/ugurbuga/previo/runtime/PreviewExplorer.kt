@@ -25,7 +25,6 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LocalContentColor
@@ -843,7 +842,7 @@ private fun PreviewContentContainer(
                 modifier = Modifier.fillMaxSize().background(previewBg),
                 contentAlignment = Alignment.TopCenter
             ) {
-                androidx.compose.material3.MaterialTheme(
+                MaterialTheme(
                     colorScheme = androidx.compose.material3.lightColorScheme(
                         background = previewBg,
                         surface = previewBg,
@@ -854,14 +853,28 @@ private fun PreviewContentContainer(
                     CompositionLocalProvider(
                         LocalContentColor provides Color.Black
                     ) {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .background(previewBg)
-                                .padding(16.dp),
-                            contentAlignment = Alignment.TopCenter
-                        ) {
-                            preview.content()
+                        if (preview.isVerticallyScrollable) {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .background(previewBg)
+                                    .padding(16.dp),
+                                contentAlignment = Alignment.TopCenter
+                            ) {
+                                preview.content()
+                            }
+                        } else {
+                            val scrollState = rememberScrollState()
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .background(previewBg)
+                                    .verticalScroll(scrollState)
+                                    .padding(16.dp),
+                                contentAlignment = Alignment.TopCenter
+                            ) {
+                                preview.content()
+                            }
                         }
                     }
                 }

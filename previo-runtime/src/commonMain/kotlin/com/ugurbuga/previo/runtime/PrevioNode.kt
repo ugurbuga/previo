@@ -16,7 +16,11 @@ enum class NodeKind {
 }
 
 fun ComposableNode.toPrevioNode(idPrefix: String = "node"): PrevioNode {
-    val kind = if (isNative) NodeKind.Leaf else NodeKind.Container
+    val kind = when {
+        isNative -> NodeKind.Leaf
+        children.isNotEmpty() -> NodeKind.Container
+        else -> NodeKind.Unknown
+    }
     return PrevioNode(
         id = idPrefix,
         name = name,

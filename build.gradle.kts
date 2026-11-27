@@ -7,6 +7,12 @@ plugins {
     alias(libs.plugins.composeCompiler) apply false
     alias(libs.plugins.kotlinJvm) apply false
     alias(libs.plugins.kotlinMultiplatform) apply false
-    alias(libs.plugins.mavenPublish) apply false
     alias(libs.plugins.ksp) apply false
+}
+
+subprojects {
+    if (name.startsWith("previo-")) {
+        group = findProperty("PREVIO_GROUP")?.toString() ?: ""
+        version = findProperty("PREVIO_VERSION")?.toString() ?: ""
+    }
 }

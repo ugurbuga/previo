@@ -21,7 +21,8 @@ data class FunctionInfo(
 
 class PrevioSymbolProcessor(
     private val codeGenerator: CodeGenerator,
-    private val logger: KSPLogger
+    private val logger: KSPLogger,
+    private val options: Map<String, String> = emptyMap()
 ) : SymbolProcessor {
 
     private val nativeComposables = setOf(
@@ -58,6 +59,13 @@ class PrevioSymbolProcessor(
     }
 
     override fun process(resolver: Resolver): List<KSAnnotated> {
+        val enabled = options["previo.enabled"]?.lowercase() != "false"
+        if (!enabled) {
+            logger.info("Previo symbol processor is disabled via 'previo.enabled=false'.")
+            return emptyList()
+        }
+        val collectTree = options["previo.collectHierarchyTree"]?.lowercase() != "false"
+
         val symbols = resolver.getSymbolsWithAnnotation("androidx.compose.ui.tooling.preview.Preview")
             .filterIsInstance<KSFunctionDeclaration>()
 
@@ -67,10 +75,6 @@ class PrevioSymbolProcessor(
         if (validSymbols.isEmpty()) {
             return unvalidated
         }
-
-        val composableSymbols = resolver.getSymbolsWithAnnotation("androidx.compose.runtime.Composable")
-            .filterIsInstance<KSFunctionDeclaration>()
-        val funcDeclMap = composableSymbols.associateBy { it.simpleName.asString() }
 
         val globalFuncMap = mutableMapOf<String, FunctionInfo>()
         for (kf in resolver.getAllFiles()) {
@@ -111,10 +115,6 @@ class PrevioSymbolProcessor(
             val functionName = symbol.simpleName.asString()
             val fullName = "$packageName.$functionName"
             val safeName = functionName + "_" + packageName.replace(".", "_")
-
-            val funcMap = globalFuncMap
-
-            val funcInfo = funcMap[functionName]
 
             // Get 'name' and 'backgroundColor' arguments from @Preview annotation
             var previewName = ""
@@ -157,7 +157,7 @@ class PrevioSymbolProcessor(
                 customInfo = ""
             }
 
-            val resolvedBody = resolveRecursiveBody(functionName, funcMap)
+            val resolvedBody = resolveRecursiveBody(functionName, globalFuncMap)
 
             val isVerticallyScrollable = resolvedBody.contains("LazyColumn") ||
                                          resolvedBody.contains("LazyVerticalGrid") ||
@@ -215,7 +215,11 @@ class PrevioSymbolProcessor(
 
             val bgCode = if (backgroundColorVal != null) "${backgroundColorVal}L" else "null"
 
-            val rootNode = buildAstNodeTreeFromFunctionText(functionName, funcMap)
+            val rootNode = if (collectTree) {
+                buildAstNodeTreeFromFunctionText(functionName, globalFuncMap)
+            } else {
+                ComposableNode(functionName, true, emptyList())
+            }
             val composableNodeCode = generateNodeCode(rootNode)
 
             val entryFileContent = """
@@ -643,6 +647,6 @@ class PrevioSymbolProcessor(
 
 class PrevioSymbolProcessorProvider : SymbolProcessorProvider {
     override fun create(environment: SymbolProcessorEnvironment): SymbolProcessor {
-        return PrevioSymbolProcessor(environment.codeGenerator, environment.logger)
+        return PrevioSymbolProcessor(environment.codeGenerator, environment.logger, environment.options)
     }
 }

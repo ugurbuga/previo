@@ -132,6 +132,27 @@ fun App() {
 }
 ```
 
+### Step 6: Configure KSP Processor Options (Optional)
+
+You can configure Previo symbol processor compile-time behavior in your module's `build.gradle.kts`:
+
+```kotlin
+ksp {
+    // Disable Previo processor completely (ideal for release builds)
+    arg("previo.enabled", "false")
+
+    // Disable hierarchy tree generation only
+    arg("previo.collectHierarchyTree", "false")
+}
+```
+
+Or globally via `gradle.properties`:
+
+```properties
+ksp.option.previo.enabled=false
+ksp.option.previo.collectHierarchyTree=false
+```
+
 ---
 
 ## 🎨 Custom Colors with `PrevioColors`

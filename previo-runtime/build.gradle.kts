@@ -9,9 +9,6 @@ plugins {
     alias(libs.plugins.mavenPublish)
 }
 
-group = "io.github.ugurbuga"
-version = "1.0.0-alpha12"
-
 kotlin {
     listOf(
         iosArm64(),
@@ -63,12 +60,6 @@ kotlin {
 }
 
 mavenPublishing {
-    publishToMavenCentral(com.vanniktech.maven.publish.SonatypeHost.CENTRAL_PORTAL, automaticRelease = true)
-    if (project.hasProperty("signing.keyId") || System.getenv("ORG_GRADLE_PROJECT_signingInMemoryKey") != null) {
-        signAllPublications()
-    }
-    coordinates("io.github.ugurbuga", "previo-runtime", "1.0.0-alpha12")
-
     pom {
         name.set("Previo Runtime")
         description.set("Automated Runtime Preview Explorer for Compose Multiplatform")
@@ -90,19 +81,6 @@ mavenPublishing {
             connection.set("scm:git:github.com/ugurbuga/previo.git")
             developerConnection.set("scm:git:ssh://github.com/ugurbuga/previo.git")
             url.set("https://github.com/ugurbuga/previo")
-        }
-    }
-}
-
-publishing {
-    repositories {
-        maven {
-            name = "GitHubPackages"
-            url = uri("https://maven.pkg.github.com/ugurbuga/previo")
-            credentials {
-                username = project.findProperty("gpr.user") as String? ?: System.getenv("GITHUB_ACTOR")
-                password = project.findProperty("gpr.key") as String? ?: System.getenv("GITHUB_TOKEN")
-            }
         }
     }
 }
