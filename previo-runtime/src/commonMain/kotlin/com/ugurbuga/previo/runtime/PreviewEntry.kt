@@ -12,7 +12,6 @@ data class PreviewEntry(
     val isVerticallyScrollable: Boolean = false,
     val isHorizontallyScrollable: Boolean = false,
     val backgroundColor: Long? = null,
-    val callTree: String = "",
     val composableNode: ComposableNode? = null,
     val content: @Composable () -> Unit
 )

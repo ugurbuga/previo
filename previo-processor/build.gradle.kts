@@ -1,12 +1,7 @@
-import org.gradle.api.publish.maven.MavenPublication
-
 plugins {
     alias(libs.plugins.kotlinJvm)
     alias(libs.plugins.mavenPublish)
 }
-
-group = "io.github.ugurbuga"
-version = "1.0.0-alpha12"
 
 dependencies {
     implementation(libs.kotlin.test)
@@ -15,12 +10,6 @@ dependencies {
 }
 
 mavenPublishing {
-    publishToMavenCentral(com.vanniktech.maven.publish.SonatypeHost.CENTRAL_PORTAL, automaticRelease = true)
-    if (project.hasProperty("signing.keyId") || System.getenv("ORG_GRADLE_PROJECT_signingInMemoryKey") != null) {
-        signAllPublications()
-    }
-    coordinates("io.github.ugurbuga", "previo-processor", "1.0.0-alpha12")
-
     pom {
         name.set("Previo Processor")
         description.set("Automated KSP Symbol Processor for Previo Preview Explorer")
@@ -42,19 +31,6 @@ mavenPublishing {
             connection.set("scm:git:github.com/ugurbuga/previo.git")
             developerConnection.set("scm:git:ssh://github.com/ugurbuga/previo.git")
             url.set("https://github.com/ugurbuga/previo")
-        }
-    }
-}
-
-publishing {
-    repositories {
-        maven {
-            name = "GitHubPackages"
-            url = uri("https://maven.pkg.github.com/ugurbuga/previo")
-            credentials {
-                username = project.findProperty("gpr.user") as String? ?: System.getenv("GITHUB_ACTOR")
-                password = project.findProperty("gpr.key") as String? ?: System.getenv("GITHUB_TOKEN")
-            }
         }
     }
 }

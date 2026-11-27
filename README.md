@@ -10,7 +10,7 @@ Previo is a modern Kotlin Multiplatform library that automatically discovers all
 - **Interactive Composable Hierarchy Tree**: Parses the nested composable call tree at compile time into `ComposableNode`, rendering an expandable/collapsible hierarchy overlay on detail screens.
 - **Smart Scroll Management**: Automatically analyzes AST / source code for `LazyColumn`, `LazyRow`, `verticalScroll`, `horizontalScroll`, and `LazyVerticalGrid` to prevent nested scrolling crashes.
 - **Purpose-Named `PrevioColors` Palette**: Categorized color system (`screenBackground`, `cardBackground`, `primaryText`, `secondaryText`, `dividerOrBorder`, `chipSelectedBackground`, `chipSelectedText`, `iconTint`, `badgeBackground`, `badgeText`) with sleek Light (`PrevioDefaults.LightColors`) and Dark (`PrevioDefaults.DarkColors`) presets.
-- **Parametric Feature Flags**: Control library execution at runtime with `enabled` (ideal for disabling in release builds), `collectPreviews`, and `collectHierarchyTree`.
+- **Parametric Feature Flags & Config**: Full control over library behavior with `enabled`, `collectPreviews`, `collectHierarchyTree`, `showExtraTreeInfo`, `isDarkTheme`, and custom color palettes.
 - **4-Part Naming Standard**: Organize previews cleanly into `[Group] [Order] [Component] [Details]`.
 - **Native Interop**: Automatically handles Android system back buttons/gestures (`PrevioBackHandler`) and status bar icon color adaptation (`SetStatusBarColor`).
 - **Internationalization (i18n)**: Fully localized in English using Compose Multiplatform `stringResource`.
@@ -19,7 +19,7 @@ Previo is a modern Kotlin Multiplatform library that automatically discovers all
 ---
 
 ## 📦 Current Version
-- **Latest Version**: `1.0.0-alpha11`
+- **Latest Version**: `1.0.0-alpha14`
 - **Hosted on**: [Maven Central](https://central.sonatype.com/) & GitHub Packages
 
 ---
@@ -70,10 +70,10 @@ In your module's `build.gradle.kts`:
 ```kotlin
 dependencies {
     // 1. Previo Runtime Library
-    implementation("io.github.ugurbuga:previo-runtime:1.0.0-alpha11")
+    implementation("io.github.ugurbuga:previo-runtime:1.0.0-alpha14")
     
     // 2. Previo KSP Processor (Generates preview registry & hierarchy tree at compile time)
-    add("kspCommonMainMetadata", "io.github.ugurbuga:previo-processor:1.0.0-alpha11")
+    add("kspCommonMainMetadata", "io.github.ugurbuga:previo-processor:1.0.0-alpha14")
 }
 ```
 
@@ -116,6 +116,8 @@ fun App() {
     val myConfig = PrevioConfig(
         title = "Design System Catalog",
         enabled = true, // Set to false in release builds
+        collectPreviews = true,
+        collectHierarchyTree = true,
         isDarkTheme = true,
         colors = PrevioDefaults.DarkColors
     )
@@ -134,10 +136,21 @@ fun App() {
 
 ---
 
-## 🎨 Custom Colors with `PrevioColors`
+## 🎨 Customizing `PrevioConfig` & `PrevioColors`
 
-Previo supports purpose-named color customization via `PrevioColors`:
+Previo provides comprehensive configuration options via `PrevioConfig`:
 
+| Parameter | Type | Default | Description |
+| :--- | :--- | :--- | :--- |
+| `title` | `String` | `"Previo Explorer"` | Title displayed in the top bar of the explorer. |
+| `enabled` | `Boolean` | `true` | Master switch to enable or disable Previo (e.g. set to `false` in release builds). |
+| `collectPreviews` | `Boolean` | `true` | Whether to load and display discovered previews. |
+| `collectHierarchyTree` | `Boolean` | `true` | Whether to enable the Composable hierarchy call tree inspection feature. |
+| `colors` | `PrevioColors?` | `null` | Custom color palette (`PrevioColors`). Defaults to `PrevioDefaults.LightColors` or `DarkColors`. |
+| `isDarkTheme` | `Boolean` | `false` | Automatically picks dark default colors if `colors` is null and `isDarkTheme` is true. |
+| `showExtraTreeInfo` | `Boolean` | `false` | Displays advanced node debug metadata in the hierarchy tree. |
+
+### Purpose-Named Color Palette (`PrevioColors`)
 ```kotlin
 val customPalette = PrevioColors(
     screenBackground = Color(0xFF0F172A),
@@ -151,8 +164,6 @@ val customPalette = PrevioColors(
     badgeBackground = Color(0xFF334155),
     badgeText = Color(0xFFE2E8F0)
 )
-
-val config = PrevioConfig(colors = customPalette)
 ```
 
 ---
